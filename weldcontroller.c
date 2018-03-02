@@ -28,7 +28,8 @@ int main(void)
 
 	adc_init();
 
-	/*tim1_init();*/
+	tim1_init();
+	/*tim1_enable(true);*/
 	/*tim2_init();*/
 	usart_send_string(USART1, "Welding controller started \n", strlen("Welding controller started \n"));
 	/*gpio_clear(GREEN_LED_PORT, GREEN_LED);*/

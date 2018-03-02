@@ -284,17 +284,18 @@ void process_command(char *cmd)
 
 	if (strncmp(cmd, SET_PWM_STRING, strlen(SET_PWM_STRING)) == 0)
 	{
-		uint8_t pwmVal = atoi(cmd + 1);
+		uint8_t pwmVal = atoi(cmd + strlen(SET_PWM_STRING) + 1);
+		usart_send_byte(USART1, pwmVal);
 		if (pwmVal <= 100){
 			tim1_set_pwm(pwmVal);
-			usart_send_string(USART1, "PWM updated\n", strlen("PWM updated\n"));
+			/*usart_send_string(USART1, "PWM updated\n", strlen("PWM updated\n"));*/
 		}else{
 			usart_send_string(USART1, "ERROR\n", strlen("ERROR\n"));
 		}
 	}
 
 	if (strncmp(cmd, GAS_STRING, strlen(GAS_STRING)) == 0){
-		if ( atoi(cmd + 1) == 1 ){
+		if ( atoi(cmd + strlen(GAS_STRING) + 1) == 1 ){
 			gas_set(true);
 			usart_send_string(USART1, "Gas on\n", strlen("Gas on\n"));
 		}else{
@@ -304,7 +305,7 @@ void process_command(char *cmd)
 	}
 
 	if (strncmp(cmd, WELDING_STRING, strlen(WELDING_STRING)) == 0){
-		if ( atoi(cmd + 1) == 1 ){
+		if ( atoi(cmd + strlen(WELDING_STRING) + 1) == 1 ){
 			welding_set(true);
 		usart_send_string(USART1, "Welding on\n", strlen("Welding onf\n"));
 		}else{
