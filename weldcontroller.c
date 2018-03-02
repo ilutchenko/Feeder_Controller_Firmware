@@ -19,6 +19,7 @@ uint16_t compare_time = 30000;
 
 void gas_set(uint8_t val);
 void welding_set(uint8_t val);
+void break_motor(void);
 int main(void)
 {
 	rcc_init();
@@ -27,9 +28,10 @@ int main(void)
 
 	adc_init();
 
-	tim1_init();
-	tim2_init();
+	/*tim1_init();*/
+	/*tim2_init();*/
 	usart_send_string(USART1, "Welding controller started \n", strlen("Welding controller started \n"));
+	/*gpio_clear(GREEN_LED_PORT, GREEN_LED);*/
 
 	int i;
         while (1) {
@@ -39,17 +41,27 @@ int main(void)
 	return 0;
 }
 void sys_tick_handler(void){
-
+/*PID regulation here?*/
 }
-void gas_set(uint8_t val){
+
+void gas_set(uint8_t val)
+{
 	if (val == true)
 		gpio_set(GAS_PORT, GAS_PIN);
 	else 
 		gpio_clear(GAS_PORT, GAS_PIN);
 }
-void welding_set(uint8_t val){
+
+void welding_set(uint8_t val)
+{
 	if (val == true)
 		gpio_set(WELD_PORT, WELD_PIN);
 	else
 		gpio_clear(WELD_PORT, WELD_PIN);
+}
+
+void break_motor(void)
+{
+	tim1_enable(false);
+	gpio_set(BREAK_PORT, BREAK_PIN);
 }

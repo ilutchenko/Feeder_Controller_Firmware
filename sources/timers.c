@@ -30,6 +30,8 @@ void tim2_init(void)
 /*
  *PWM timer
  *Freq: 39 KHz
+ *we are using a low level on output pin to drive a MOSFET,
+ so PWM is configured with output polarity low.
  */
 void tim1_init(void)
 {
@@ -64,6 +66,8 @@ void tim1_init(void)
 	timer_disable_preload(TIM1);
 	timer_continuous_mode(TIM1);
 	timer_enable_oc_preload(TIM1,TIM_OC1);
+	/*Output compare polarity*/
+	timer_set_oc_polarity_low(TIM1, TIM_OC1);
 
 	/* Set the initual output compare value for OC1. */
 	tim1_set_pwm(START_PWM_VALUE);
@@ -77,6 +81,7 @@ void tim1_init(void)
 	timer_enable_irq(TIM1, (TIM_DIER_CC1IE));
 
 }
+
 void tim1_enable(uint8_t param)
 {
 	if (param == true)
@@ -121,4 +126,51 @@ void tim1_cc_isr (void)
 		upcount = 1;
 	}
 	timer_set_oc_value(TIM1, TIM_OC1, compare_time); 
+}
+
+/*
+ *Timer 3 used to generate single impulse to motor breaking circuit
+ *Lenth of breaking impulse defines with BREAK_IMPULSE_LENTH (in ms)
+ */
+void tim3_init(void)
+{
+	/* Enable TIM1 clock. */
+	rcc_periph_clock_enable(RCC_TIM3);
+	/* Reset TIM1 peripheral to defaults. */
+	rcc_periph_reset_pulse(RST_TIM3);
+
+
+	/* Timer global mode:
+	 * - No divider
+	 * - Alignment edge
+	 * - Direction up
+	 * (These are actually default values after reset above, so this call
+	 * is strictly unnecessary, but demos the api for alternative settings)
+	 */
+	timer_set_mode(TIM3, TIM_CR1_CKD_CK_INT,
+			TIM_CR1_CMS_EDGE, TIM_CR1_DIR_UP);
+
+	/*Set cycle duty to 3 seconds*/
+	timer_set_prescaler(TIM3, 60000-1);
+	timer_set_period(TIM3, TIMER3_TOP);
+
+	/* Disable preload. */
+	timer_disable_preload(TIM3);
+	timer_continuous_mode(TIM3);
+	timer_enable_oc_preload(TIM3,TIM_OC3);
+	/*Output compare polarity*/
+	/*timer_set_oc_polarity_low(TIM3, TIM_OC3);*/
+
+	/* Set the initual output compare value for OC1. */
+	/*tim1_set_pwm(BREAK_IMPULSE_LENTH);*/
+	/*timer_set_oc_value(TIM3, TIM_OC1, BREAK_IMPULSE_LENTH); */
+
+	/* Enable TIM3 interrupt. */
+	/*nvic_enable_irq(NVIC_TIM3_CC_IRQ);*/
+	/*nvic_enable_irq(NVIC_TIM3_UP_IRQ);*/
+
+	/*Enable timer 3 overflow and compare int */
+	/*timer_enable_irq(TIM3, (TIM_DIER_UIE));*/
+	timer_enable_irq(TIM3, (TIM_DIER_CC1IE));
+
 }

@@ -15,4 +15,7 @@
 
 #define WELD_PIN	GPIO2
 #define WELD_PORT	GPIOA
+
+#define BREAK_PIN	GPIO3
+#define BREAK_PORT	GPIOA
 #endif

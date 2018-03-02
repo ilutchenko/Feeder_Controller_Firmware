@@ -18,12 +18,14 @@ void gpio_init(){
 	gpio_set_mode(YELLOW_LED_PORT, GPIO_MODE_OUTPUT_50_MHZ,
 		GPIO_CNF_OUTPUT_PUSHPULL, YELLOW_LED);
 
-	/*Enable pins for multiplexers*/
+	/*Enable pins for gas, welding, motor breaking*/
 
 	gpio_set_mode(GAS_PORT, GPIO_MODE_OUTPUT_50_MHZ,
 		GPIO_CNF_OUTPUT_PUSHPULL, GAS_PIN);
 	gpio_set_mode(WELD_PORT, GPIO_MODE_OUTPUT_50_MHZ,
 		GPIO_CNF_OUTPUT_PUSHPULL, WELD_PIN);
+	gpio_set_mode(BREAK_PORT, GPIO_MODE_OUTPUT_50_MHZ,
+		GPIO_CNF_OUTPUT_PUSHPULL, BREAK_PIN);
 	/* Toggle LED to indicate compare event. */
 	gpio_set(GREEN_LED_PORT, GREEN_LED);
 }

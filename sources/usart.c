@@ -10,9 +10,9 @@
 #include "bq76pl455.h"
 uint8_t testdata[8] = {1, 2, 3, 4, 5, 6, 7, 8};
 uint16_t voltageArray[16];
-static char help_msg[] = "Battery management system: \n   Hardware version: 2.0 \n   Firmware version: 1.0 \n   CANopen objects: N/A \n";
-static uint8_t resiever[50];
-static uint8_t rec_len;
+static char help_msg[] = "Welding automatic controller: \n   Hardware version: 0.1 \n   Firmware version: 1.0 \n";
+static uint8_t resiever1[50];
+static uint8_t rec_len1;
 static uint8_t resiever2[50];
 static uint8_t rec_len2;
 USART_t usart1;
@@ -20,6 +20,8 @@ USART_t usart2;
 USART_t usart3;
 extern void gas_set(uint8_t val);
 extern void welding_set(uint8_t val);
+extern void break_motor(void);
+
 bool usart_init(uint32_t usart, uint32_t baudrate,  bool remap)
 {
 	switch (usart)
@@ -111,6 +113,61 @@ bool usart_init(uint32_t usart, uint32_t baudrate,  bool remap)
 	/* Finally enable the USART. */
 	usart_enable(usart);
 	return 1;
+}
+
+void usart1_isr(void)
+{
+	uint8_t tmp;
+
+	//Check if we were called because of RXNE. 
+	if (((USART_CR1(USART1) & USART_CR1_RXNEIE) != 0) &&
+			((USART_SR(USART1) & USART_SR_RXNE) != 0)) {
+
+		/* Retrieve the data from the peripheral. */
+		tmp = usart_recv(USART1);
+		if (tmp == '\n')
+		{
+			resiever1[rec_len1++] = 0;	/* Make null-terminated string */
+			process_command(resiever1);
+			rec_len1 = 0;
+		}else{
+			resiever1[rec_len1++] = tmp;
+		}
+
+		/*USART_CR1(USART1) &= ~USART_CR1_RXNEIE;*/
+	}
+	//Check if we were called because of TXE. 
+	if (((USART_CR1(USART1) & USART_CR1_TXEIE) != 0) &&
+			((USART_SR(USART1) & USART_SR_TXE) != 0)) {
+		/*Check the count of non-sended words*/	
+		if (usart1.lenth != 0){
+			/*send bytes until it will be send*/
+			if (usart1.byte_counter-- != 0){
+				usart_send(USART1, *usart1.data_pointer++);
+			}else{
+				if(--usart1.lenth !=0){
+					/*Reconfig usarts pointers and byte array*/
+					usart1.byte_counter = 3;
+					usart1.global_pointer++;
+					usart1.data1 = (*usart1.global_pointer >> 24) & 0xff;
+					usart1.data2 = (*usart1.global_pointer >> 16) & 0xff;
+					usart1.data3 = (*usart1.global_pointer >> 8) & 0xff;
+					usart1.data4 = (*usart1.global_pointer) & 0xff;
+					usart1.data_pointer = &usart1.data1;
+					usart_send(USART1, *usart1.data_pointer++);
+				}else{
+					//Disable the TXE interrupt as we don't need it anymore. 
+					USART_CR1(USART1) &= ~USART_CR1_TXEIE;
+					usart1.busy = 0;
+				}
+			}
+
+		}else{
+			//Disable the TXE interrupt as we don't need it anymore. 
+			USART_CR1(USART1) &= ~USART_CR1_TXEIE;
+			usart1.busy = 0;
+		}
+	}
 }
 
 void usart2_isr(void)
@@ -205,6 +262,7 @@ void usart_send_32(uint32_t USART, uint32_t *data, uint8_t lenth)
  */
 void process_command(char *cmd)
 {
+	gpio_clear(GREEN_LED_PORT, GREEN_LED);
 	uint16_t t;
 	if (strncmp(cmd, "LED", 3) == 0)
 	{
@@ -220,7 +278,7 @@ void process_command(char *cmd)
 
 	if (strncmp(cmd, STOP_STRING, strlen(STOP_STRING)) == 0)
 	{
-		tim1_enable(false);
+		break_motor();
 		usart_send_string(USART1, "Stopped\n", strlen("Stopped\n"));
 	}
 
