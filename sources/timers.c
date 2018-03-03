@@ -3,26 +3,8 @@
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/timer.h>
 #include "timers.h"
+extern uint16_t motorFreq; 
 
-/*
- *Input capture timer
- */
-void tim2_init(void)
-{
-
-	rcc_periph_clock_enable(RCC_TIM2);
-
-	/* Time Base configuration */
-	rcc_periph_reset_pulse(RST_TIM2);
-	timer_set_mode(TIM2, TIM_CR1_CKD_CK_INT,
-			TIM_CR1_CMS_EDGE, TIM_CR1_DIR_UP);
-	timer_set_period(TIM2, 0xFF);
-	timer_set_prescaler(TIM2, 0x8);
-	timer_set_clock_division(TIM2, 0x0);
-	/* Generate TRGO on every update. */
-	timer_set_master_mode(TIM2, TIM_CR2_MMS_UPDATE);
-	timer_enable_counter(TIM2);
-} 
 /*
  *PWM timer
  *Freq: 39 KHz
@@ -56,7 +38,7 @@ void tim1_init(void)
 	 * In our case, TIM2 on APB1 is running at double frequency, so this
 	 * sets the prescaler to have the timer run at 5kHz
 	 */
-	timer_set_prescaler(TIM1, 0);
+	timer_set_prescaler(TIM1, TIMER1_PRESCALER);
 
 	/* Disable preload. */
 	timer_disable_preload(TIM1);
@@ -78,51 +60,39 @@ void tim1_init(void)
 
 }
 
-void tim1_enable(uint8_t param)
+/*
+ *Timer for motor's frequency measurement
+ *It generates interrupts on rising edges of square wave signal
+ *and gets period in input capture 1 register
+ */
+void tim2_init(void)
 {
-	if (param == true)
-		/* Counter enable. */
-		timer_enable_counter(TIM1);
-	else if (param == false)
-		timer_disable_counter(TIM1);
-}
 
-/* @brief Sets PWM duty
- * @param PWM duty in percents
- * */
-void tim1_set_pwm (uint8_t pwm)
-{
-	uint16_t compareVal;
-	compareVal = (uint16_t)(TIMER1_TOP * pwm / 100);
-	timer_set_oc_value(TIM1, TIM_OC1, compareVal); 
-}
-void tim1_up_isr(void)
-{
-	/* Clear update interrupt flag. */
-	timer_clear_flag(TIM1, TIM_SR_UIF);
-	gpio_set(RED_LED_PORT, RED_LED);
-}
-void tim1_cc_isr (void)
-{
-	/* Clear compare interrupt flag. */
-	timer_clear_flag(TIM1, TIM_SR_CC1IF);
+	rcc_periph_clock_enable(RCC_TIM2);
 
-	gpio_clear(RED_LED_PORT, RED_LED);
+	/* Timer Base configuration */
+	rcc_periph_reset_pulse(RST_TIM2);
+	timer_set_mode(TIM2, TIM_CR1_CKD_CK_INT,
+			TIM_CR1_CMS_EDGE, TIM_CR1_DIR_UP);
+	timer_set_period(TIM2, TIMER2_TOP);
+	timer_set_prescaler(TIM2, TIMER2_PRESCALER);
 
-	if (upcount ==1){
-		compare_time += COMPARE_STEP;
-	}else{
-		compare_time -= COMPARE_STEP;
-	}
+	/*Input capture configuration*/
+	/*Enable timer 2 capture init */
+	timer_ic_set_input(TIM2, TIM_IC1, TIM_IC_IN_TI1);
+	/*Triggered on rising edge*/
+	timer_set_oc_polarity_high(TIM2, TIM_OC1);
+	timer_slave_set_trigger(TIM2, TIM_SMCR_TS_TI1FP1);	
+	/*Reset at rising edge*/
+	timer_slave_set_mode(TIM2, TIM_SMCR_SMS_RM);
+	timer_ic_enable(TIM2, TIM_IC1);
 
-	if (compare_time == 59000){
-		upcount = 0;
-	}
-	if (compare_time == 0){
-		upcount = 1;
-	}
-	timer_set_oc_value(TIM1, TIM_OC1, compare_time); 
-}
+	/*Capture 1 interrupt*/
+	nvic_enable_irq(NVIC_TIM2_IRQ);
+	timer_enable_irq(TIM2, (TIM_DIER_CC1IE));
+
+	timer_enable_counter(TIM2);
+} 
 
 /*
  *Timer 3 used to generate single impulse to motor breaking circuit
@@ -147,7 +117,7 @@ void tim3_init(void)
 			TIM_CR1_CMS_EDGE, TIM_CR1_DIR_UP);
 
 	/*Set cycle duty to 3 seconds*/
-	timer_set_prescaler(TIM3, 60000-1);
+	timer_set_prescaler(TIM3, TIMER3_PRESCALER);
 	timer_set_period(TIM3, TIMER3_TOP);
 
 	/* Disable preload. */
@@ -169,4 +139,55 @@ void tim3_init(void)
 	/*timer_enable_irq(TIM3, (TIM_DIER_UIE));*/
 	timer_enable_irq(TIM3, (TIM_DIER_CC1IE));
 
+}
+
+void tim1_enable(uint8_t param)
+{
+	if (param == true)
+		/* Counter enable. */
+		timer_enable_counter(TIM1);
+	else if (param == false)
+		timer_disable_counter(TIM1);
+}
+
+/* @brief Sets PWM duty
+ * @param PWM duty in percents
+ * */
+void tim1_set_pwm (uint8_t pwm)
+{
+	uint16_t compareVal;
+	compareVal = (uint16_t)(TIMER1_TOP * pwm / 100);
+	timer_set_oc_value(TIM1, TIM_OC1, compareVal); 
+}
+
+/*
+ *This two interrupts handlers not realy needed in welding controller
+ *Writed just for indication with led that timer 1 works properly 
+ */
+void tim1_up_isr(void)
+{
+	/* Clear update interrupt flag. */
+	timer_clear_flag(TIM1, TIM_SR_UIF);
+	gpio_set(RED_LED_PORT, RED_LED);
+}
+
+void tim1_cc_isr (void)
+{
+	/* Clear compare interrupt flag. */
+	timer_clear_flag(TIM1, TIM_SR_CC1IF);
+	gpio_clear(RED_LED_PORT, RED_LED);
+}
+
+/*Motor square wave rising edge interrupt*/
+void tim2_isr(void)
+{
+	/*If input capture 1 (rising edge) occurs*/
+	if (timer_get_flag(TIM2, TIM_SR_CC1IF))
+	{ 
+		timer_clear_flag(TIM2, TIM_SR_CC1IF);
+		uint16_t freq;
+		/* 50 here is timer 2 counting frequency*/
+		freq = (uint16_t)(50 * (TIMER2_TOP / TIM_CCR1(TIM2)));
+		motorFreq = freq;
+	}
 }

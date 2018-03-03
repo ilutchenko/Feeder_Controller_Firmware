@@ -207,7 +207,7 @@ void usart2_isr(void)
 					usart2.data3 = (*usart2.global_pointer >> 8) & 0xff;
 					usart2.data4 = (*usart2.global_pointer) & 0xff;
 					usart2.data_pointer = &usart2.data1;
-					usart_send(USART2, *usart1.data_pointer++);
+					usart_send(USART2, *usart2.data_pointer++);
 				}else{
 					//Disable the TXE interrupt as we don't need it anymore. 
 					USART_CR1(USART2) &= ~USART_CR1_TXEIE;
@@ -238,21 +238,39 @@ void usart_send_string(uint32_t USART, char *BufferPtr, uint16_t Length )
 
 void usart_send_32(uint32_t USART, uint32_t *data, uint8_t lenth)
 {
-	while (usart1.busy);
-	usart1.busy = 1;	
-	//Divide 32bit to 8bit
-	usart1.data1 = (*data >> 24) & 0xff;
-	usart1.data2 = (*data >> 16) & 0xff;
-	usart1.data3 = (*data >> 8) & 0xff;
-	usart1.data4 = (*data) & 0xff;
-	usart1.lenth = lenth;
-	usart1.byte_counter = 4;
-	usart1.global_pointer = data;
-	usart1.data_pointer = &usart1.data1;	//
-	usart_send_blocking(USART, *usart1.data_pointer++);
-	usart1.byte_counter--;
-	//Enable TxE interrupt
-	USART_CR1(USART) |= USART_CR1_TXEIE;
+	if (USART == USART1){
+		while (usart1.busy);
+		usart1.busy = 1;	
+		//Divide 32bit to 8bit
+		usart1.data1 = (*data >> 24) & 0xff;
+		usart1.data2 = (*data >> 16) & 0xff;
+		usart1.data3 = (*data >> 8) & 0xff;
+		usart1.data4 = (*data) & 0xff;
+		usart1.lenth = lenth;
+		usart1.byte_counter = 4;
+		usart1.global_pointer = data;
+		usart1.data_pointer = &usart1.data1;	//
+		usart_send_blocking(USART, *usart1.data_pointer++);
+		usart1.byte_counter--;
+		//Enable TxE interrupt
+		USART_CR1(USART) |= USART_CR1_TXEIE;
+	}else if (USART == USART2){
+		while (usart2.busy);
+		usart2.busy = 1;	
+		//Divide 32bit to 8bit
+		usart2.data1 = (*data >> 24) & 0xff;
+		usart2.data2 = (*data >> 16) & 0xff;
+		usart2.data3 = (*data >> 8) & 0xff;
+		usart2.data4 = (*data) & 0xff;
+		usart2.lenth = lenth;
+		usart2.byte_counter = 4;
+		usart2.global_pointer = data;
+		usart2.data_pointer = &usart2.data1;	//
+		usart_send_blocking(USART, *usart2.data_pointer++);
+		usart2.byte_counter--;
+		//Enable TxE interrupt
+		USART_CR1(USART) |= USART_CR1_TXEIE;
+	}
 }
 /*
  *@brief Processing input commands
@@ -303,10 +321,10 @@ void process_command(uint8_t *cmd)
 	if (strncmp(cmd, WELDING_STRING, strlen(WELDING_STRING)) == 0){
 		if ( atoi(cmd + 1) == 1 ){
 			welding_set(true);
-		usart_send_string(USART1, "Welding on\n", strlen("Welding onf\n"));
+			usart_send_string(USART1, "Welding on\n", strlen("Welding onf\n"));
 		}else{
 			welding_set(false);
-		usart_send_string(USART1, "Welding off\n", strlen("Welding off\n"));
+			usart_send_string(USART1, "Welding off\n", strlen("Welding off\n"));
 		}
 	}
 
@@ -319,23 +337,42 @@ void process_command(uint8_t *cmd)
 
 void usart_send_data (uint32_t USART, uint32_t *data, uint8_t lenth)
 {
-	while (usart1.busy);
-	usart1.busy = 1;	
-	usart1.lenth = lenth;
-	usart1.byte_counter = 4;
-	usart1.global_pointer = data;
-	usart1.data_pointer = &usart1.data1;	//
-	usart_send_blocking(USART, *usart1.data_pointer++);
-	usart1.byte_counter--;
-	//Enable TxE interrupt
-	USART_CR1(USART) |= USART_CR1_TXEIE;
+	if (USART == USART1)
+	{
+		while (usart1.busy);
+		usart1.busy = 1;	
+		usart1.lenth = lenth;
+		usart1.byte_counter = 4;
+		usart1.global_pointer = data;
+		usart1.data_pointer = &usart1.data1;	//
+		usart_send_blocking(USART, *usart1.data_pointer++);
+		usart1.byte_counter--;
+		//Enable TxE interrupt
+		USART_CR1(USART) |= USART_CR1_TXEIE;
+	}else if (USART == USART2){
+		while (usart2.busy);
+		usart2.busy = 1;	
+		usart2.lenth = lenth;
+		usart2.byte_counter = 4;
+		usart2.global_pointer = data;
+		usart2.data_pointer = &usart2.data1;	//
+		usart_send_blocking(USART, *usart2.data_pointer++);
+		usart2.byte_counter--;
+		//Enable TxE interrupt
+		USART_CR1(USART) |= USART_CR1_TXEIE;
+	}
 }
 
 void usart_send_byte (uint32_t USART, uint8_t data)
 {
-
-	while (usart1.busy);
-	usart_send_blocking(USART, data);
+	if (USART == USART1)
+	{
+		while (usart1.busy);
+		usart_send_blocking(USART, data);
+	}else if (USART == USART2){
+		while (usart2.busy);
+		usart_send_blocking(USART, data);
+	}
 }
 
 double atof (const char *s)
@@ -390,34 +427,34 @@ double atof (const char *s)
 
 void ftoa (float num, uint8_t *str, uint8_t precision)
 {
-    int intpart = num;
-    int intdecimal;
-    int i;
-    float decimal_part;
-    char decimal[20];
+	int intpart = num;
+	int intdecimal;
+	int i;
+	float decimal_part;
+	char decimal[20];
 
-    memset(str, 0x0, 20);
-    if (num > (-1) && num < (0))
-    {
-        strcat(str, "-");
-        itoa(num, str+1, 10);
-    }else{
-        itoa(num, str, 10);
-    }
-    strcat(str, ".");
+	memset(str, 0x0, 20);
+	if (num > (-1) && num < (0))
+	{
+		strcat(str, "-");
+		itoa(num, str+1, 10);
+	}else{
+		itoa(num, str, 10);
+	}
+	strcat(str, ".");
 
-    decimal_part = num - intpart;
-    intdecimal = decimal_part * 1000000;
+	decimal_part = num - intpart;
+	intdecimal = decimal_part * 1000000;
 
-    if(intdecimal < 0)
-    {
-        intdecimal = -intdecimal;
-    }
-    itoa(intdecimal, decimal, 10);
-    for(i =0;i < (precision - strlen(decimal));i++)
-    {
-        strcat(str, "0");
-    }
-    strcat(str, decimal);
+	if(intdecimal < 0)
+	{
+		intdecimal = -intdecimal;
+	}
+	itoa(intdecimal, decimal, 10);
+	for(i =0;i < (precision - strlen(decimal));i++)
+	{
+		strcat(str, "0");
+	}
+	strcat(str, decimal);
 }
 

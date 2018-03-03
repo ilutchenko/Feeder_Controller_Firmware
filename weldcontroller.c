@@ -11,10 +11,7 @@
 #include "sources/timers.h"
 #include "sources/defines.h"
 #include <string.h>
-uint8_t	upcount = 1;
-uint32_t temp = 0x12345678;
-uint8_t temp2;
-uint16_t compare_time = 30000;
+uint16_t motorFreq; 
 
 void gas_set(uint8_t val);
 void welding_set(uint8_t val);
@@ -25,20 +22,21 @@ int main(void)
 	gpio_init();
 	usart_init(USART1, 115200, false);
 
-	/*tim1_init();*/
-	/*tim2_init();*/
+	tim1_init();
+	tim2_init();
+	tim3_init();
 	usart_send_string(USART1, "Welding controller started \n", strlen("Welding controller started \n"));
-	/*gpio_clear(GREEN_LED_PORT, GREEN_LED);*/
 
 	int i;
-        while (1) {
-                for (i = 0; i < 800000; i++)	/* Wait a bit. */
+	while (1) {
+		for (i = 0; i < 800000; i++)	/* Wait a bit. */
 			__asm__("nop");
 	}
 	return 0;
+
 }
 void sys_tick_handler(void){
-/*PID regulation here?*/
+	/*PID regulation here?*/
 }
 
 void gas_set(uint8_t val)
@@ -60,5 +58,6 @@ void welding_set(uint8_t val)
 void break_motor(void)
 {
 	tim1_enable(false);
+	/*tim3_enable(true);*/
 	gpio_set(BREAK_PORT, BREAK_PIN);
 }
