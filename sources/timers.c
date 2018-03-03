@@ -4,15 +4,11 @@
 #include <libopencm3/stm32/timer.h>
 #include "timers.h"
 
-extern uint8_t	upcount;
-extern uint16_t compare_time;
 /*
  *Input capture timer
  */
 void tim2_init(void)
 {
-	/* Set up the timer TIM2 for injected sampling */
-	uint32_t timer;
 
 	rcc_periph_clock_enable(RCC_TIM2);
 

@@ -7,9 +7,7 @@
 #include <libopencm3/stm32/i2c.h>
 #include <libopencm3/cm3/nvic.h>
 #include "usart.h"
-#include "bq76pl455.h"
-uint8_t testdata[8] = {1, 2, 3, 4, 5, 6, 7, 8};
-uint16_t voltageArray[16];
+#include "timers.h"
 static char help_msg[] = "Welding automatic controller: \n   Hardware version: 0.1 \n   Firmware version: 1.0 \n";
 static uint8_t resiever1[50];
 static uint8_t rec_len1;
@@ -260,10 +258,9 @@ void usart_send_32(uint32_t USART, uint32_t *data, uint8_t lenth)
  *@brief Processing input commands
  *@param pointer to resieved string
  */
-void process_command(char *cmd)
+void process_command(uint8_t *cmd)
 {
 	gpio_clear(GREEN_LED_PORT, GREEN_LED);
-	uint16_t t;
 	if (strncmp(cmd, "LED", 3) == 0)
 	{
 		gpio_toggle(GREEN_LED_PORT, GREEN_LED);

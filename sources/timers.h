@@ -8,5 +8,8 @@
 #define TIMER3_TOP	400
 void tim1_init(void);
 void tim2_init(void);
+void tim3_init(void);
+void tim1_enable(uint8_t param);
+void tim1_set_pwm (uint8_t pwm);
 
 #endif

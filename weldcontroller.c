@@ -7,7 +7,6 @@
 #include <libopencm3/stm32/gpio.h>
 #include "sources/gpio.h"
 #include "sources/rcc.h"
-#include "sources/adc.h"
 #include "sources/usart.h"
 #include "sources/timers.h"
 #include "sources/defines.h"
@@ -25,8 +24,6 @@ int main(void)
 	rcc_init();
 	gpio_init();
 	usart_init(USART1, 115200, false);
-
-	adc_init();
 
 	/*tim1_init();*/
 	/*tim2_init();*/
