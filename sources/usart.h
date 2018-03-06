@@ -22,7 +22,7 @@ typedef struct{
 }USART_t;
 bool usart_init(uint32_t usart, uint32_t baudrate,  bool remap);
 void usart_send_32(uint32_t , uint32_t * , uint8_t );
-void process_command(uint8_t *cmd);
+uint8_t process_command(uint8_t *cmd, uint8_t cmdLenth);
 void usart_send_data(uint32_t USART, uint32_t *data, uint8_t lenth);
 void usart_send_byte(uint32_t USART, uint8_t data);
 void usart_send_string(uint32_t USART, char *BufferPtr, uint16_t Length);

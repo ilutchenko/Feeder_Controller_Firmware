@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <libopencm3/stm32/rcc.h>
+#include <libopencm3/stm32/crc.h>
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/cm3/nvic.h>
 #include "usart.h"
@@ -124,7 +125,7 @@ void usart1_isr(void)
 		if (tmp == '\n')
 		{
 			resiever1[rec_len1++] = 0;	/* Make null-terminated string */
-			process_command(resiever1);
+			process_command(resiever1, rec_len1-2);
 			rec_len1 = 0;
 		}else{
 			resiever1[rec_len1++] = tmp;
@@ -179,7 +180,7 @@ void usart2_isr(void)
 		if (tmp == '\n')
 		{
 			resiever2[rec_len2++] = 0;	/* Make null-terminated string */
-			process_command(resiever2);
+			process_command(resiever2, rec_len2-2);
 			rec_len2 = 0;
 		}else{
 			resiever2[rec_len2++] = tmp;
@@ -273,64 +274,85 @@ void usart_send_32(uint32_t USART, uint32_t *data, uint8_t lenth)
 /*
  *@brief Processing input commands
  *@param pointer to resieved string
- */
-void process_command(uint8_t *cmd)
+ *@param lenth of resieved command without \n symbol
+*/ 
+uint8_t process_command(uint8_t *cmd, uint8_t cmdLenth)
 {
-	gpio_clear(GREEN_LED_PORT, GREEN_LED);
-	if (strncmp(cmd, "LED", 3) == 0)
+
+#ifdef USART_CRC
+	uint32_t resCRC;
+	resCRC = atoi(cmd+cmdLenth-4);
+	if (resCRC != crc_calculate_block(cmd, cmdLenth-4))
+	{
+		return -1;
+	}
+
+#endif
+		if (strncmp(cmd, "LED", 3) == 0)
 	{
 		gpio_toggle(GREEN_LED_PORT, GREEN_LED);
 		usart_send_byte(USART1, 'l');
+		return 0;
 	}    
 
 	if (strncmp(cmd, START_STRING, strlen(START_STRING)) == 0)
 	{
 		tim1_enable(true);
 		usart_send_string(USART1, "Started\n", strlen("Started\n"));
+		return 0;
 	}
 
 	if (strncmp(cmd, STOP_STRING, strlen(STOP_STRING)) == 0)
 	{
 		break_motor();
 		usart_send_string(USART1, "Stopped\n", strlen("Stopped\n"));
+		return 0;
 	}
 
 	if (strncmp(cmd, SET_PWM_STRING, strlen(SET_PWM_STRING)) == 0)
 	{
-		uint8_t pwmVal = atoi(cmd + 1);
+		uint8_t pwmVal = atoi(cmd + strlen(SET_PWM_STRING) + 1);
+		usart_send_byte(USART1, pwmVal);
 		if (pwmVal <= 100){
 			tim1_set_pwm(pwmVal);
 			usart_send_string(USART1, "PWM updated\n", strlen("PWM updated\n"));
 		}else{
 			usart_send_string(USART1, "ERROR\n", strlen("ERROR\n"));
 		}
+		return 0;
 	}
 
 	if (strncmp(cmd, GAS_STRING, strlen(GAS_STRING)) == 0){
-		if ( atoi(cmd + 1) == 1 ){
+		if ( atoi(cmd + strlen(GAS_STRING) + 1) == 1 ){
 			gas_set(true);
 			usart_send_string(USART1, "Gas on\n", strlen("Gas on\n"));
 		}else{
 			gas_set(false);
 			usart_send_string(USART1, "Gas off\n", strlen("Gas off\n"));
 		}
+		return 0;
 	}
 
 	if (strncmp(cmd, WELDING_STRING, strlen(WELDING_STRING)) == 0){
-		if ( atoi(cmd + 1) == 1 ){
+		if ( atoi(cmd + strlen(WELDING_STRING) + 1) == 1 ){
 			welding_set(true);
-			usart_send_string(USART1, "Welding on\n", strlen("Welding onf\n"));
+		usart_send_string(USART1, "Welding on\n", strlen("Welding onf\n"));
 		}else{
 			welding_set(false);
-			usart_send_string(USART1, "Welding off\n", strlen("Welding off\n"));
+		usart_send_string(USART1, "Welding off\n", strlen("Welding off\n"));
 		}
+		return 0;
 	}
 
 	/* Manual  */
 	if (strncmp(cmd, "info", 4) == 0)
 	{
 		usart_send_string(USART1, help_msg, sizeof(help_msg)-1);
+		return 0;
 	}
+
+	/*Return that command wasn't recognised*/
+		return -1;
 }
 
 void usart_send_data (uint32_t USART, uint32_t *data, uint8_t lenth)
