@@ -1,8 +1,10 @@
 #ifndef TIMERS_H
 #define TIMERS_H
 
+#include <libopencm3/stm32/timer.h>
 #include "defines.h"
 #define START_PWM_VALUE		90
+//Break impulse in ms
 #define BREAK_IMPULSE_LENTH	1000
 
 /*
@@ -13,7 +15,7 @@
  */
 #define TIMER1_TOP		1846
 #define TIMER2_TOP		45000
-#define TIMER3_TOP		400
+#define TIMER3_TOP		3600	/*period = 3sec*/
 
 //prescaler sets as "prescaler - 1"
 #define TIMER1_PRESCALER	0
@@ -25,5 +27,6 @@ void tim2_init(void);
 void tim3_init(void);
 void tim1_enable(uint8_t param);
 void tim1_set_pwm (uint8_t pwm);
+void tim2_set_pwm (uint16_t pwm);
 
 #endif

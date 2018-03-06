@@ -29,6 +29,7 @@ endif
 # Executables
 
 PREFIX		?= arm-none-eabi
+#PREFIX		?= arm-unknown-eabi
 
 CC		:= $(PREFIX)-gcc
 CXX		:= $(PREFIX)-g++

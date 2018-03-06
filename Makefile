@@ -1,6 +1,6 @@
 APPL_SRC =      sources
 
-BINARY = weldcontroller
+BINARY = feedercontroller
 
 INCLUDE_DIRS =  -I$(APPL_SRC)
 

@@ -3,12 +3,10 @@
 #include <string.h>
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
-#include <libopencm3/stm32/usart.h>
-#include <libopencm3/stm32/i2c.h>
 #include <libopencm3/cm3/nvic.h>
 #include "usart.h"
 #include "timers.h"
-static char help_msg[] = "Welding automatic controller: \n   Hardware version: 0.1 \n   Firmware version: 1.0 \n";
+static uint8_t help_msg[] = "Welding automatic controller: \n   Hardware version: 0.1 \n   Firmware version: 1.0 \n";
 static uint8_t resiever1[50];
 static uint8_t rec_len1;
 static uint8_t resiever2[50];
@@ -374,7 +372,6 @@ void usart_send_byte (uint32_t USART, uint8_t data)
 		usart_send_blocking(USART, data);
 	}
 }
-
 double atof (const char *s)
 {
 	// This function stolen from either Rolf Neugebauer or Andrew Tolmach. 

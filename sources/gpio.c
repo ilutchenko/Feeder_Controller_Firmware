@@ -1,6 +1,5 @@
 #ifndef GPIO_H
 #define GPIO_H
-#include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/rcc.h>
 #include "gpio.h"
 

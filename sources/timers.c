@@ -1,8 +1,8 @@
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/cm3/nvic.h>
 #include <libopencm3/stm32/gpio.h>
-#include <libopencm3/stm32/timer.h>
 #include "timers.h"
+#include "usart.h"
 extern uint16_t motorFreq; 
 
 /*
@@ -110,8 +110,6 @@ void tim3_init(void)
 	 * - No divider
 	 * - Alignment edge
 	 * - Direction up
-	 * (These are actually default values after reset above, so this call
-	 * is strictly unnecessary, but demos the api for alternative settings)
 	 */
 	timer_set_mode(TIM3, TIM_CR1_CKD_CK_INT,
 			TIM_CR1_CMS_EDGE, TIM_CR1_DIR_UP);
@@ -122,17 +120,17 @@ void tim3_init(void)
 
 	/* Disable preload. */
 	timer_disable_preload(TIM3);
-	timer_continuous_mode(TIM3);
+	timer_one_shot_mode(TIM3);
 	timer_enable_oc_preload(TIM3,TIM_OC3);
 	/*Output compare polarity*/
-	/*timer_set_oc_polarity_low(TIM3, TIM_OC3);*/
+	timer_set_oc_polarity_high(TIM3, TIM_OC3);
 
 	/* Set the initual output compare value for OC1. */
-	/*tim1_set_pwm(BREAK_IMPULSE_LENTH);*/
-	/*timer_set_oc_value(TIM3, TIM_OC1, BREAK_IMPULSE_LENTH); */
+	tim3_set_pwm(BREAK_IMPULSE_LENTH);
+	timer_set_oc_value(TIM3, TIM_OC1, BREAK_IMPULSE_LENTH); 
 
 	/* Enable TIM3 interrupt. */
-	/*nvic_enable_irq(NVIC_TIM3_CC_IRQ);*/
+	nvic_enable_irq(NVIC_TIM3_IRQ);
 	/*nvic_enable_irq(NVIC_TIM3_UP_IRQ);*/
 
 	/*Enable timer 3 overflow and compare int */
@@ -150,6 +148,14 @@ void tim1_enable(uint8_t param)
 		timer_disable_counter(TIM1);
 }
 
+void tim3_enable(uint8_t param)
+{
+	if (param == true)
+		/* Counter enable. */
+		timer_enable_counter(TIM3);
+	else if (param == false)
+		timer_disable_counter(TIM3);
+}
 /* @brief Sets PWM duty
  * @param PWM duty in percents
  * */
@@ -158,6 +164,16 @@ void tim1_set_pwm (uint8_t pwm)
 	uint16_t compareVal;
 	compareVal = (uint16_t)(TIMER1_TOP * pwm / 100);
 	timer_set_oc_value(TIM1, TIM_OC1, compareVal); 
+}
+
+/* @brief Sets break pulse duty
+ * @param pulse duty in ms
+*/
+void tim3_set_pwm (uint16_t pwm)
+{
+	uint16_t compareVal;
+	compareVal = (uint16_t)((pwm / 1000) * (TIMER3_TOP / 3));
+	timer_set_oc_value(TIM3, TIM_OC1, compareVal); 
 }
 
 /*
@@ -190,4 +206,16 @@ void tim2_isr(void)
 		freq = (uint16_t)(50 * (TIMER2_TOP / TIM_CCR1(TIM2)));
 		motorFreq = freq;
 	}
+}
+
+/*Break impulse complited interrupt*/
+void tim3_isr(void)
+{
+	if (timer_get_flag(TIM3, TIM_SR_CC1IF))
+	{
+		timer_clear_flag(TIM3, TIM_SR_CC1IF);
+		usart_send_string(USART1, "Break impulse executed\n", sizeof("Break impulse executed\n"));
+
+	}
+	
 }
