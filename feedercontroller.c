@@ -23,6 +23,7 @@ int main(void)
 	usart_init(USART1, 115200, false);
 
 	tim1_init();
+	tim1_enable(true);
 	tim2_init();
 	tim3_init();
 	usart_send_string(USART1, "Welding controller started \n", strlen("Welding controller started \n"));
@@ -58,6 +59,6 @@ void welding_set(uint8_t val)
 void break_motor(void)
 {
 	tim1_enable(false);
-	/*tim3_enable(true);*/
-	gpio_set(BREAK_PORT, BREAK_PIN);
+	tim3_enable(true);
+	/*gpio_set(BREAK_PORT, BREAK_PIN);*/
 }

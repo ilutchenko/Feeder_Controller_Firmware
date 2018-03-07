@@ -224,12 +224,34 @@ void usart2_isr(void)
 
 void usart_send_string(uint32_t USART, char *BufferPtr, uint16_t Length )
 {
+	uint8_t *strPointer = BufferPtr;
+	uint32_t strCRC;
+	uint8_t strCRCpointer[4];
+	uint8_t len = Length;	
+#ifdef USART_CRC
+	uint8_t len = Length - 1;	/*Ignore \n symbol*/
+	/*But allocate memory for string with \n (+4 for CRC and +1 for \n)*/
+	strPointer = (uint8_t) malloc(len + 5);
+	strCRCpointer = (uint8_t) malloc(4);
+	strCRC = crc_calculate_block(BufferPtr, len-4);
+	strCRCpointer[0] = strCRC >> 24; 	
+	strCRCpointer[1] = strCRC >> 16; 	
+	strCRCpointer[2] = strCRC >> 8; 	
+	strCRCpointer[3] = strCRC & 0xFF; 	
+	/*itoa(strCRC, strCRCpointer, 10);*/
+ 
+	/*Add 4 CRC bytes to string*/
+	strncat(strPointer, strCRCpointer, 4);
+	strncat(strPointer, "\n", 1);
 
-	while ( Length != 0 )
+	/*If CRC defined, we should send more bytes*/
+	Length += 4;
+#endif
+	while ( len != 0 )
 	{
-		usart_send_blocking(USART, *BufferPtr);
-		BufferPtr++;
-		Length--;
+		usart_send_blocking(USART, *strPointer);
+		strPointer++;
+		len--;
 	}
 
 	return;
