@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/crc.h>
 #include <libopencm3/stm32/gpio.h>
@@ -239,7 +240,7 @@ void usart_send_string(uint32_t USART, char *BufferPtr, uint16_t Length )
 	strCRCpointer[2] = strCRC >> 8; 	
 	strCRCpointer[3] = strCRC & 0xFF; 	
 	/*itoa(strCRC, strCRCpointer, 10);*/
- 
+
 	/*Add 4 CRC bytes to string*/
 	strncat(strPointer, strCRCpointer, 4);
 	strncat(strPointer, "\n", 1);
@@ -296,21 +297,23 @@ void usart_send_32(uint32_t USART, uint32_t *data, uint8_t lenth)
 /*
  *@brief Processing input commands
  *@param pointer to resieved string
- *@param lenth of resieved command without \n symbol
-*/ 
-uint8_t process_command(uint8_t *cmd, uint8_t cmdLenth)
+ *@param length of resieved command without \n symbol
+ */ 
+uint8_t process_command(uint8_t *cmd, uint8_t cmdLength)
 {
 
 #ifdef USART_CRC
 	uint32_t resCRC;
-	resCRC = atoi(cmd+cmdLenth-4);
-	if (resCRC != crc_calculate_block(cmd, cmdLenth-4))
+	/*resCRC = atoi(cmd+cmdLength-4);*/
+	resCRC = (&(cmd+cmdLength-3) << 24 | &(cmd+cmdLength-2) << 16
+			| &(cmd+cmdLength-1) << 8 | &(cmd+cmdLength));
+	if (resCRC != crc_calculate_block(cmd, cmdLength-4))
 	{
 		return -1;
 	}
 
 #endif
-		if (strncmp(cmd, "LED", 3) == 0)
+	if (strncmp(cmd, "LED", 3) == 0)
 	{
 		gpio_toggle(GREEN_LED_PORT, GREEN_LED);
 		usart_send_byte(USART1, 'l');
@@ -358,10 +361,10 @@ uint8_t process_command(uint8_t *cmd, uint8_t cmdLenth)
 	if (strncmp(cmd, WELDING_STRING, strlen(WELDING_STRING)) == 0){
 		if ( atoi(cmd + strlen(WELDING_STRING) + 1) == 1 ){
 			welding_set(true);
-		usart_send_string(USART1, "Welding on\n", strlen("Welding onf\n"));
+			usart_send_string(USART1, "Welding on\n", strlen("Welding onf\n"));
 		}else{
 			welding_set(false);
-		usart_send_string(USART1, "Welding off\n", strlen("Welding off\n"));
+			usart_send_string(USART1, "Welding off\n", strlen("Welding off\n"));
 		}
 		return 0;
 	}
@@ -374,7 +377,7 @@ uint8_t process_command(uint8_t *cmd, uint8_t cmdLenth)
 	}
 
 	/*Return that command wasn't recognised*/
-		return -1;
+	return -1;
 }
 
 void usart_send_data (uint32_t USART, uint32_t *data, uint8_t lenth)
@@ -468,9 +471,9 @@ double atof (const char *s)
 
 void ftoa (float num, uint8_t *str, uint8_t precision)
 {
-	int intpart = num;
-	int intdecimal;
-	int i;
+	uint16_t intpart = num;
+	int16_t intdecimal;
+	uint16_t i;
 	float decimal_part;
 	char decimal[20];
 
@@ -492,7 +495,7 @@ void ftoa (float num, uint8_t *str, uint8_t precision)
 		intdecimal = -intdecimal;
 	}
 	itoa(intdecimal, decimal, 10);
-	for(i =0;i < (precision - strlen(decimal));i++)
+	for(i = 0; i < (precision - strlen(decimal)); i++)
 	{
 		strcat(str, "0");
 	}

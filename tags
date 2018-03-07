@@ -3697,7 +3697,7 @@ BBIO_PERIPH	libopencm3/include/libopencm3/cm3/common.h	/^#define BBIO_PERIPH(/;"
 BBIO_SRAM	libopencm3/include/libopencm3/cm3/common.h	/^#define BBIO_SRAM(/;"	d
 BEGIN_DECLS	libopencm3/include/libopencm3/cm3/common.h	/^# define BEGIN_DECLS /;"	d
 BEGIN_DECLS	libopencm3/include/libopencm3/cm3/common.h	/^# define BEGIN_DECLS$/;"	d
-BINARY	Makefile	/^BINARY = weldcontroller$/;"	m
+BINARY	Makefile	/^BINARY = feedercontroller$/;"	m
 BIT0	libopencm3/include/libopencm3/cm3/common.h	/^#define BIT0 /;"	d
 BIT1	libopencm3/include/libopencm3/cm3/common.h	/^#define BIT1 /;"	d
 BIT10	libopencm3/include/libopencm3/cm3/common.h	/^#define BIT10 /;"	d
@@ -18426,7 +18426,7 @@ POWER_CONTROL_BASE	libopencm3/include/libopencm3/stm32/l0/memorymap.h	/^#define 
 POWER_CONTROL_BASE	libopencm3/include/libopencm3/stm32/l1/memorymap.h	/^#define POWER_CONTROL_BASE	/;"	d
 POWER_CONTROL_BASE	libopencm3/include/libopencm3/stm32/l4/memorymap.h	/^#define POWER_CONTROL_BASE	/;"	d
 PPBI_BASE	libopencm3/include/libopencm3/cm3/memorymap.h	/^#define PPBI_BASE /;"	d
-PREFIX	libopencm3.rules.mk	/^PREFIX		?= arm-unknown-eabi$/;"	m
+PREFIX	libopencm3.rules.mk	/^PREFIX		?= arm-none-eabi$/;"	m
 PREFIX	libopencm3/Makefile	/^PREFIX		?= arm-none-eabi$/;"	m
 PREFIX	libopencm3/lib/efm32/g/Makefile	/^PREFIX		?= arm-none-eabi$/;"	m
 PREFIX	libopencm3/lib/efm32/gg/Makefile	/^PREFIX		?= arm-none-eabi$/;"	m
@@ -33052,7 +33052,7 @@ bottomToTopSubMenus	libopencm3/doc/html/jquery.js	/^(function(a){if(typeof defin
 bp	libopencm3/doc/html/jquery.js	/^(function(){var bH=\/((?:\\((?:\\([^()]+\\)|[^()]+)+\\)|\\[(?:\\[[^\\[\\]]*\\]|['"][^'"]*['"]|[^/;"	v
 bq	libopencm3/doc/html/jquery.js	/^(function(){var bH=\/((?:\\((?:\\([^()]+\\)|[^()]+)+\\)|\\[(?:\\[[^\\[\\]]*\\]|['"][^'"]*['"]|[^/;"	v
 br	libopencm3/doc/html/jquery.js	/^(function(){var bH=\/((?:\\((?:\\([^()]+\\)|[^()]+)+\\)|\\[(?:\\[[^\\[\\]]*\\]|['"][^'"]*['"]|[^/;"	v
-break_motor	weldcontroller.c	/^void break_motor(void)$/;"	f	typeref:typename:void
+break_motor	feedercontroller.c	/^void break_motor(void)$/;"	f	typeref:typename:void
 bridge	libopencm3/doc/html/jquery.js	/^(function(b,d){if(b.cleanData){var c=b.cleanData;b.cleanData=function(f){for(var g=0,h;(h=f[g])!/;"	f	function:b.widget
 bs	libopencm3/doc/html/jquery.js	/^(function(){var bH=\/((?:\\((?:\\([^()]+\\)|[^()]+)+\\)|\\[(?:\\[[^\\[\\]]*\\]|['"][^'"]*['"]|[^/;"	v
 bt	libopencm3/doc/html/jquery.js	/^(function(bb,L){var av=bb.document,bu=bb.navigator,bl=bb.location;var b=(function(){var bF=funct/;"	f
@@ -34115,7 +34115,7 @@ gadget0_set_config	libopencm3/tests/gadget-zero/usb-gadget0.c	/^static void gadg
 gadget0_ss_in_cb	libopencm3/tests/gadget-zero/usb-gadget0.c	/^static void gadget0_ss_in_cb(usbd_device *usbd_dev, uint8_t ep)$/;"	f	typeref:typename:void	file:
 gadget0_ss_out_cb	libopencm3/tests/gadget-zero/usb-gadget0.c	/^static void gadget0_ss_out_cb(usbd_device *usbd_dev, uint8_t ep)$/;"	f	typeref:typename:void	file:
 gadget0_tx_cb_loopback	libopencm3/tests/gadget-zero/usb-gadget0.c	/^static void gadget0_tx_cb_loopback(usbd_device *usbd_dev, uint8_t ep)$/;"	f	typeref:typename:void	file:
-gas_set	weldcontroller.c	/^void gas_set(uint8_t val)$/;"	f	typeref:typename:void
+gas_set	feedercontroller.c	/^void gas_set(uint8_t val)$/;"	f	typeref:typename:void
 genlink_cppflags	libopencm3/mk/genlink-config.mk	/^genlink_cppflags	:=$(shell gawk -v PAT="$(DEVICE)" -v MODE="CPPFLAGS" -f $(OPENCM3_DIR)\/scripts/;"	m
 genlink_cpu	libopencm3/mk/genlink-config.mk	/^genlink_cpu		:=$(shell gawk -v PAT="$(DEVICE)" -v MODE="CPU" -f $(OPENCM3_DIR)\/scripts\/genlink/;"	m
 genlink_family	libopencm3/mk/genlink-config.mk	/^genlink_family		:=$(shell gawk -v PAT="$(DEVICE)" -v MODE="FAMILY" -f $(OPENCM3_DIR)\/scripts\/g/;"	m
@@ -34319,7 +34319,7 @@ height	libopencm3/doc/html/jquery.js	/^(function(b,c){var a=false;b(document).mo
 height	libopencm3/doc/html/jquery.js	/^(function(b,c){var a=false;b(document).mouseup(function(d){a=false});b.widget("ui.mouse",{option/;"	p	class:t.containerSize
 height	libopencm3/doc/html/jquery.js	/^(function(b,c){var a=false;b(document).mouseup(function(d){a=false});b.widget("ui.mouse",{option/;"	p	class:t.parentData
 help	libopencm3/scripts/checkpatch.pl	/^sub help {$/;"	s
-help_msg	sources/usart.c	/^static char help_msg[] = "Welding automatic controller: \\n   Hardware version: 0.1 \\n   Firmwa/;"	v	typeref:typename:char[]	file:
+help_msg	sources/usart.c	/^static uint8_t help_msg[] = "Welding automatic controller: \\n   Hardware version: 0.1 \\n   Fir/;"	v	typeref:typename:uint8_t[]	file:
 hex	libopencm3.rules.mk	/^hex: $(BINARY).hex$/;"	t
 hibernate_isr	libopencm3/lib/lm3s/vector_nvic.c	/^#pragma weak hibernate_isr /;"	d	file:
 hidden	libopencm3/doc/html/jquery.js	/^(function(){var bH=\/((?:\\((?:\\([^()]+\\)|[^()]+)+\\)|\\[(?:\\[[^\\[\\]]*\\]|['"][^'"]*['"]|[^/;"	f	function:b.expr.filters
@@ -34756,6 +34756,7 @@ m	libopencm3/doc/html/jquery.js	/^(function(a){if(typeof define==="function"&&de
 m	libopencm3/doc/html/jquery.js	/^(function(a){if(typeof define==="function"&&define.amd){define(["jquery"],a)}else{if(typeof modu/;"	c
 m0core_isr	libopencm3/lib/lpc43xx/m4/vector_nvic.c	/^#pragma weak m0core_isr /;"	d	file:
 m4core_isr	libopencm3/lib/lpc43xx/m0/vector_nvic.c	/^#pragma weak m4core_isr /;"	d	file:
+main	feedercontroller.c	/^int main(void)$/;"	f	typeref:typename:int
 main	libopencm3/scripts/irq2nvic_h	/^def main():$/;"	f
 main	libopencm3/tests/gadget-zero/main-stm32f072disco.c	/^int main(void)$/;"	f	typeref:typename:int
 main	libopencm3/tests/gadget-zero/main-stm32f103-generic.c	/^int main(void)$/;"	f	typeref:typename:int
@@ -34763,7 +34764,6 @@ main	libopencm3/tests/gadget-zero/main-stm32f429i-disco.c	/^int main(void)$/;"	f
 main	libopencm3/tests/gadget-zero/main-stm32f4disco.c	/^int main(void)$/;"	f	typeref:typename:int
 main	libopencm3/tests/gadget-zero/main-stm32l053disco.c	/^int main(void)$/;"	f	typeref:typename:int
 main	libopencm3/tests/gadget-zero/main-stm32l1-generic.c	/^int main(void)$/;"	f	typeref:typename:int
-main	weldcontroller.c	/^int main(void)$/;"	f	typeref:typename:int
 mainMenuSubOffsetX	libopencm3/doc/html/jquery.js	/^(function(a){if(typeof define==="function"&&define.amd){define(["jquery"],a)}else{if(typeof modu/;"	p	class:a.fn.smartmenus.defaults
 mainMenuSubOffsetY	libopencm3/doc/html/jquery.js	/^(function(a){if(typeof define==="function"&&define.amd){define(["jquery"],a)}else{if(typeof modu/;"	p	class:a.fn.smartmenus.defaults
 makeTree	libopencm3/doc/html/menu.js	/^  function makeTree(data,relPath) {$/;"	f	function:initMenu
@@ -34786,7 +34786,7 @@ memory_manage_fault	libopencm3/include/libopencm3/cm3/vector.h	/^	vector_table_e
 menudata	libopencm3/doc/html/menudata.js	/^var menudata={children:[$/;"	c
 minHeight	libopencm3/doc/html/jquery.js	/^(function(b,c){var a=false;b(document).mouseup(function(d){a=false});b.widget("ui.mouse",{option/;"	p	class:_updateVirtualBoundaries
 minWidth	libopencm3/doc/html/jquery.js	/^(function(b,c){var a=false;b(document).mouseup(function(d){a=false});b.widget("ui.mouse",{option/;"	p	class:_updateVirtualBoundaries
-motorFreq	weldcontroller.c	/^uint16_t motorFreq; $/;"	v	typeref:typename:uint16_t
+motorFreq	feedercontroller.c	/^uint16_t motorFreq; $/;"	v	typeref:typename:uint16_t
 motor_pwm_isr	libopencm3/lib/lpc17xx/vector_nvic.c	/^#pragma weak motor_pwm_isr /;"	d	file:
 mouseOnToPopup	libopencm3/doc/html/jquery.js	/^(function(a){if(typeof define==="function"&&define.amd){define(["jquery"],a)}else{a(jQuery)}}(fu/;"	p	class:k.fn.powerTip.defaults
 mouseTrackingActive	libopencm3/doc/html/jquery.js	/^(function(a){if(typeof define==="function"&&define.amd){define(["jquery"],a)}else{a(jQuery)}}(fu/;"	p	class:c
@@ -35138,7 +35138,7 @@ previousX	libopencm3/doc/html/jquery.js	/^(function(a){if(typeof define==="funct
 previousY	libopencm3/doc/html/jquery.js	/^(function(a){if(typeof define==="function"&&define.amd){define(["jquery"],a)}else{a(jQuery)}}(fu/;"	p	class:c
 print-%	libopencm3.rules.mk	/^print-%:$/;"	t
 process	libopencm3/scripts/checkpatch.pl	/^sub process {$/;"	s
-process_command	sources/usart.c	/^void process_command(uint8_t *cmd)$/;"	f	typeref:typename:void
+process_command	sources/usart.c	/^uint8_t process_command(uint8_t *cmd, uint8_t cmdLength)$/;"	f	typeref:typename:uint8_t
 product_id	libopencm3/lib/usb/usb_msc.c	/^	const char *product_id;$/;"	m	struct:_usbd_mass_storage	typeref:typename:const char *	file:
 product_revision_level	libopencm3/lib/usb/usb_msc.c	/^	const char *product_revision_level;$/;"	m	struct:_usbd_mass_storage	typeref:typename:const char *	file:
 progress	libopencm3/doc/html/jquery.js	/^(function(bb,L){var av=bb.document,bu=bb.navigator,bl=bb.location;var b=(function(){var bF=funct/;"	p	class:bC
@@ -36094,8 +36094,8 @@ sv_call_handler	libopencm3/lib/cm3/vector.c	/^#pragma weak sv_call_handler /;"	d
 sw	libopencm3/doc/html/jquery.js	/^(function(a){if(typeof define==="function"&&define.amd){define(["jquery"],a)}else{a(jQuery)}}(fu/;"	p	class:k.fn.powerTip.smartPlacementLists
 sw-alt	libopencm3/doc/html/jquery.js	/^(function(a){if(typeof define==="function"&&define.amd){define(["jquery"],a)}else{a(jQuery)}}(fu/;"	p	class:k.fn.powerTip.smartPlacementLists
 swpmi1_isr	libopencm3/lib/stm32/l4/vector_nvic.c	/^#pragma weak swpmi1_isr /;"	d	file:
+sys_tick_handler	feedercontroller.c	/^void sys_tick_handler(void){$/;"	f	typeref:typename:void
 sys_tick_handler	libopencm3/lib/cm3/vector.c	/^#pragma weak sys_tick_handler /;"	d	file:
-sys_tick_handler	weldcontroller.c	/^void sys_tick_handler(void){$/;"	f	typeref:typename:void
 sysctl_isr	libopencm3/lib/lm3s/vector_nvic.c	/^#pragma weak sysctl_isr /;"	d	file:
 sysctrl_isr	libopencm3/lib/sam/d/vector_nvic.c	/^#pragma weak sysctrl_isr /;"	d	file:
 sysexc_isr	libopencm3/lib/lm3s/vector_nvic.c	/^#pragma weak sysexc_isr /;"	d	file:
@@ -36285,6 +36285,7 @@ tim2_isr	libopencm3/lib/stm32/l0/vector_nvic.c	/^#pragma weak tim2_isr /;"	d	fil
 tim2_isr	libopencm3/lib/stm32/l1/vector_nvic.c	/^#pragma weak tim2_isr /;"	d	file:
 tim2_isr	libopencm3/lib/stm32/l4/vector_nvic.c	/^#pragma weak tim2_isr /;"	d	file:
 tim2_isr	sources/timers.c	/^void tim2_isr(void)$/;"	f	typeref:typename:void
+tim3_enable	sources/timers.c	/^void tim3_enable(uint8_t param)$/;"	f	typeref:typename:void
 tim3_init	sources/timers.c	/^void tim3_init(void)$/;"	f	typeref:typename:void
 tim3_isr	libopencm3/lib/stm32/f0/vector_nvic.c	/^#pragma weak tim3_isr /;"	d	file:
 tim3_isr	libopencm3/lib/stm32/f1/vector_nvic.c	/^#pragma weak tim3_isr /;"	d	file:
@@ -36294,6 +36295,7 @@ tim3_isr	libopencm3/lib/stm32/f4/vector_nvic.c	/^#pragma weak tim3_isr /;"	d	fil
 tim3_isr	libopencm3/lib/stm32/f7/vector_nvic.c	/^#pragma weak tim3_isr /;"	d	file:
 tim3_isr	libopencm3/lib/stm32/l1/vector_nvic.c	/^#pragma weak tim3_isr /;"	d	file:
 tim3_isr	libopencm3/lib/stm32/l4/vector_nvic.c	/^#pragma weak tim3_isr /;"	d	file:
+tim3_isr	sources/timers.c	/^void tim3_isr(void)$/;"	f	typeref:typename:void
 tim3_set_pwm	sources/timers.c	/^void tim3_set_pwm (uint16_t pwm)$/;"	f	typeref:typename:void
 tim4_isr	libopencm3/lib/stm32/f1/vector_nvic.c	/^#pragma weak tim4_isr /;"	d	file:
 tim4_isr	libopencm3/lib/stm32/f2/vector_nvic.c	/^#pragma weak tim4_isr /;"	d	file:
@@ -36760,7 +36762,6 @@ usart6_isr	libopencm3/lib/stm32/f4/vector_nvic.c	/^#pragma weak usart6_isr /;"	d
 usart6_isr	libopencm3/lib/stm32/f7/vector_nvic.c	/^#pragma weak usart6_isr /;"	d	file:
 usart_clear_rx_interrupt	libopencm3/lib/lm3s/usart.c	/^void usart_clear_rx_interrupt(uint32_t usart)$/;"	f	typeref:typename:void
 usart_clear_tx_interrupt	libopencm3/lib/lm3s/usart.c	/^void usart_clear_tx_interrupt(uint32_t usart)$/;"	f	typeref:typename:void
-usart_crc_calc	sources/usart.c	/^uint32_t usart_crc_calc(uint32_t data)$/;"	f	typeref:typename:uint32_t
 usart_disable	libopencm3/lib/sam/common/usart.c	/^void usart_disable(uint32_t usart)$/;"	f	typeref:typename:void
 usart_disable	libopencm3/lib/stm32/common/usart_common_all.c	/^void usart_disable(uint32_t usart)$/;"	f	typeref:typename:void
 usart_disable_data_inversion	libopencm3/lib/stm32/common/usart_common_v2.c	/^void usart_disable_data_inversion(uint32_t usart)$/;"	f	typeref:typename:void
@@ -37030,7 +37031,7 @@ wdt_isr	libopencm3/lib/sam/3s/vector_nvic.c	/^#pragma weak wdt_isr /;"	d	file:
 wdt_isr	libopencm3/lib/sam/3u/vector_nvic.c	/^#pragma weak wdt_isr /;"	d	file:
 wdt_isr	libopencm3/lib/sam/3x/vector_nvic.c	/^#pragma weak wdt_isr /;"	d	file:
 wdt_isr	libopencm3/lib/sam/d/vector_nvic.c	/^#pragma weak wdt_isr /;"	d	file:
-welding_set	weldcontroller.c	/^void welding_set(uint8_t val)$/;"	f	typeref:typename:void
+welding_set	feedercontroller.c	/^void welding_set(uint8_t val)$/;"	f	typeref:typename:void
 which_conf	libopencm3/scripts/checkpatch.pl	/^sub which_conf {$/;"	s
 widget	libopencm3/doc/html/jquery.js	/^(function(b,d){if(b.cleanData){var c=b.cleanData;b.cleanData=function(f){for(var g=0,h;(h=f[g])!/;"	f	function:b
 widget	libopencm3/doc/html/jquery.js	/^(function(b,d){if(b.cleanData){var c=b.cleanData;b.cleanData=function(f){for(var g=0,h;(h=f[g])!/;"	m	class:b.Widget
