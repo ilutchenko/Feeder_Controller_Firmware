@@ -226,14 +226,16 @@ void usart2_isr(void)
 void usart_send_string(uint32_t USART, char *BufferPtr, uint16_t Length )
 {
 	uint8_t *strPointer = BufferPtr;
-	uint32_t strCRC;
 	uint8_t strCRCpointer[4];
 	uint8_t len = Length;	
+	uint32_t strCRC;
+
 #ifdef USART_CRC
 	uint8_t len = Length - 1;	/*Ignore \n symbol*/
 	/*But allocate memory for string with \n (+4 for CRC and +1 for \n)*/
 	strPointer = (uint8_t) malloc(len + 5);
-	strCRCpointer = (uint8_t) malloc(4);
+	memcpy(strPointer, BufferPtr, len);
+
 	strCRC = crc_calculate_block(BufferPtr, len-4);
 	strCRCpointer[0] = strCRC >> 24; 	
 	strCRCpointer[1] = strCRC >> 16; 	
@@ -246,7 +248,7 @@ void usart_send_string(uint32_t USART, char *BufferPtr, uint16_t Length )
 	strncat(strPointer, "\n", 1);
 
 	/*If CRC defined, we should send more bytes*/
-	Length += 4;
+	len = Length + 4;
 #endif
 	while ( len != 0 )
 	{
@@ -255,6 +257,9 @@ void usart_send_string(uint32_t USART, char *BufferPtr, uint16_t Length )
 		len--;
 	}
 
+#ifdef USART_CRC
+	free(strPointer);
+#endif
 	return;
 }
 
