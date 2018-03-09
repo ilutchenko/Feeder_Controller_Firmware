@@ -18,7 +18,6 @@ void tim1_init(void)
 	rcc_periph_clock_enable(RCC_TIM1);
 	/* Reset TIM1 peripheral to defaults. */
 	rcc_periph_reset_pulse(RST_TIM1);
-	timer_set_period(TIM1, TIMER1_TOP);
 
 
 	/* Timer global mode:
@@ -30,7 +29,7 @@ void tim1_init(void)
 	 */
 	timer_set_mode(TIM1, TIM_CR1_CKD_CK_INT,
 			TIM_CR1_CMS_EDGE, TIM_CR1_DIR_UP);
-
+timer_enable_break_main_output(TIM1);
 	/*
 	 * Please take note that the clock source for STM32 timers
 	 * might not be the raw APB1/APB2 clocks.  In various conditions they
@@ -39,17 +38,19 @@ void tim1_init(void)
 	 * sets the prescaler to have the timer run at 5kHz
 	 */
 	timer_set_prescaler(TIM1, TIMER1_PRESCALER);
-
+	timer_set_period(TIM1, TIMER1_TOP);
 	/* Disable preload. */
 	timer_disable_preload(TIM1);
 	timer_continuous_mode(TIM1);
 	timer_enable_oc_preload(TIM1,TIM_OC1);
+	timer_set_oc_mode(TIM1, TIM_OC1, TIM_OCM_PWM1);
 	/*Output compare polarity*/
 	timer_set_oc_polarity_low(TIM1, TIM_OC1);
 
 	/* Set the initual output compare value for OC1. */
 	tim1_set_pwm(START_PWM_VALUE);
 
+	timer_enable_oc_output(TIM1, TIM_OC1);
 	/* Enable TIM1 interrupt. */
 	nvic_enable_irq(NVIC_TIM1_CC_IRQ);
 	nvic_enable_irq(NVIC_TIM1_UP_IRQ);
@@ -184,19 +185,22 @@ void tim1_up_isr(void)
 {
 	/* Clear update interrupt flag. */
 	timer_clear_flag(TIM1, TIM_SR_UIF);
-	gpio_set(RED_LED_PORT, RED_LED);
+	/*gpio_set(RED_LED_PORT, RED_LED);*/
+	gpio_clear(GREEN_LED_PORT, GREEN_LED);
 }
 
 void tim1_cc_isr (void)
 {
 	/* Clear compare interrupt flag. */
 	timer_clear_flag(TIM1, TIM_SR_CC1IF);
-	gpio_clear(RED_LED_PORT, RED_LED);
+	gpio_set(GREEN_LED_PORT, GREEN_LED);
+	/*gpio_clear(RED_LED_PORT, RED_LED);*/
 }
 
 /*Motor square wave rising edge interrupt*/
 void tim2_isr(void)
 {
+	usart_send_string(USART1, "TIM2_INT\n", sizeof("TIM2_INT\n")-1);
 	/*If input capture 1 (rising edge) occurs*/
 	if (timer_get_flag(TIM2, TIM_SR_CC1IF))
 	{ 
