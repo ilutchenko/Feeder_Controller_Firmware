@@ -122,14 +122,16 @@ void tim3_init(void)
 	/* Disable preload. */
 	timer_disable_preload(TIM3);
 	timer_one_shot_mode(TIM3);
+	timer_set_oc_mode(TIM3, TIM_OC1, TIM_OCM_PWM1);
 	timer_enable_oc_preload(TIM3,TIM_OC3);
 	/*Output compare polarity*/
 	timer_set_oc_polarity_high(TIM3, TIM_OC3);
 
 	/* Set the initual output compare value for OC1. */
 	tim3_set_pwm(BREAK_IMPULSE_LENTH);
-	timer_set_oc_value(TIM3, TIM_OC1, BREAK_IMPULSE_LENTH); 
+	/*timer_set_oc_value(TIM3, TIM_OC1, BREAK_IMPULSE_LENTH); */
 
+	timer_enable_oc_output(TIM3, TIM_OC1);
 	/* Enable TIM3 interrupt. */
 	nvic_enable_irq(NVIC_TIM3_IRQ);
 	/*nvic_enable_irq(NVIC_TIM3_UP_IRQ);*/
@@ -137,6 +139,7 @@ void tim3_init(void)
 	/*Enable timer 3 overflow and compare int */
 	/*timer_enable_irq(TIM3, (TIM_DIER_UIE));*/
 	timer_enable_irq(TIM3, (TIM_DIER_CC1IE));
+	/*timer_enable_irq(TIM3, (TIM_DIER_UIE));*/
 
 }
 
@@ -200,10 +203,10 @@ void tim1_cc_isr (void)
 /*Motor square wave rising edge interrupt*/
 void tim2_isr(void)
 {
-	usart_send_string(USART1, "TIM2_INT\n", sizeof("TIM2_INT\n")-1);
 	/*If input capture 1 (rising edge) occurs*/
 	if (timer_get_flag(TIM2, TIM_SR_CC1IF))
 	{ 
+	usart_send_string(USART1, "TIM2_INT\n", sizeof("TIM2_INT\n")-1);
 		timer_clear_flag(TIM2, TIM_SR_CC1IF);
 		uint16_t freq;
 		/* 50 here is timer 2 counting frequency*/
@@ -218,8 +221,13 @@ void tim3_isr(void)
 	if (timer_get_flag(TIM3, TIM_SR_CC1IF))
 	{
 		timer_clear_flag(TIM3, TIM_SR_CC1IF);
-		usart_send_string(USART1, "Break impulse executed\n", sizeof("Break impulse executed\n"));
+		usart_send_string(USART1, "Break impulse executed\n", sizeof("Break impulse executed\n")-1);
 
 	}
-	
+	if (timer_get_flag(TIM3, TIM_SR_UIF))
+	{
+		timer_clear_flag(TIM3, TIM_SR_UIF);
+		usart_send_string(USART1, "TIM3_UP\n", sizeof("TIM3_UP\n")-1);
+		tim3_enable(true);
+	}
 }
