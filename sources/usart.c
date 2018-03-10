@@ -17,6 +17,7 @@ USART_t usart1;
 USART_t usart2;
 USART_t usart3;
 extern void gas_set(uint8_t val);
+extern void break_set(uint8_t val);
 extern void welding_set(uint8_t val);
 extern void break_motor(void);
 
@@ -327,6 +328,7 @@ uint8_t process_command(uint8_t *cmd, uint8_t cmdLength)
 
 	if (strncmp(cmd, START_STRING, strlen(START_STRING)) == 0)
 	{
+		break_set(false);
 		tim1_enable(true);
 		timer_enable_break_main_output(TIM1);
 		usart_send_string(USART1, "Started\n", strlen("Started\n"));
@@ -336,7 +338,6 @@ uint8_t process_command(uint8_t *cmd, uint8_t cmdLength)
 	if (strncmp(cmd, STOP_STRING, strlen(STOP_STRING)) == 0)
 	{
 		break_motor();
-		timer_disable_break_main_output(TIM1);
 		usart_send_string(USART1, "Stopped\n", strlen("Stopped\n"));
 		return 0;
 	}

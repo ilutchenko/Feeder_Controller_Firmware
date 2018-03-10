@@ -1,3 +1,4 @@
+#include <string.h>
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/cm3/nvic.h>
 #include <libopencm3/stm32/gpio.h>
@@ -5,7 +6,7 @@
 #include "usart.h"
 extern uint16_t motorFreq; 
 uint16_t freqCounter = 0;
-
+extern void break_set(uint8_t val);
 /*
  *PWM timer
  *Freq: 39 KHz
@@ -54,12 +55,12 @@ void tim1_init(void)
 
 	timer_enable_oc_output(TIM1, TIM_OC1);
 	/* Enable TIM1 interrupt. */
-	nvic_enable_irq(NVIC_TIM1_CC_IRQ);
-	nvic_enable_irq(NVIC_TIM1_UP_IRQ);
+	/*nvic_enable_irq(NVIC_TIM1_CC_IRQ);*/
+	/*nvic_enable_irq(NVIC_TIM1_UP_IRQ);*/
 
 	/*Enable timer 1 overflow and compare int */
-	timer_enable_irq(TIM1, (TIM_DIER_UIE));
-	timer_enable_irq(TIM1, (TIM_DIER_CC1IE));
+	/*timer_enable_irq(TIM1, (TIM_DIER_UIE));*/
+	/*timer_enable_irq(TIM1, (TIM_DIER_CC1IE));*/
 
 }
 
@@ -125,23 +126,23 @@ void tim3_init(void)
 	timer_disable_preload(TIM3);
 	timer_one_shot_mode(TIM3);
 	timer_set_oc_mode(TIM3, TIM_OC1, TIM_OCM_PWM1);
-	timer_enable_oc_preload(TIM3,TIM_OC3);
+	timer_enable_oc_preload(TIM3,TIM_OC1);
 	/*Output compare polarity*/
-	timer_set_oc_polarity_high(TIM3, TIM_OC3);
+	timer_set_oc_polarity_low(TIM3, TIM_OC1);
 
+	/*timer_enable_break_main_output(TIM3);*/
+	/*timer_set_oc_idle_state_set(TIM3, TIM_OC1);*/
 	/* Set the initual output compare value for OC1. */
 	tim3_set_pwm(BREAK_IMPULSE_LENTH);
 	/*timer_set_oc_value(TIM3, TIM_OC1, BREAK_IMPULSE_LENTH); */
 
-	timer_enable_oc_output(TIM3, TIM_OC1);
+	/*timer_enable_oc_output(TIM3, TIM_OC1);*/
 	/* Enable TIM3 interrupt. */
 	nvic_enable_irq(NVIC_TIM3_IRQ);
-	/*nvic_enable_irq(NVIC_TIM3_UP_IRQ);*/
 
 	/*Enable timer 3 overflow and compare int */
 	/*timer_enable_irq(TIM3, (TIM_DIER_UIE));*/
 	timer_enable_irq(TIM3, (TIM_DIER_CC1IE));
-	/*timer_enable_irq(TIM3, (TIM_DIER_UIE));*/
 
 }
 
@@ -156,9 +157,10 @@ void tim1_enable(uint8_t param)
 
 void tim3_enable(uint8_t param)
 {
-	if (param == true)
+	if (param == true){
 		/* Counter enable. */
 		timer_enable_counter(TIM3);
+	}
 	else if (param == false)
 		timer_disable_counter(TIM3);
 }
@@ -216,7 +218,7 @@ void tim2_isr(void)
 		if (freqCounter++ >= 50)
 		{
 			freqCounter = 0;
-			usart_send_string(USART1, "TIM2_INT\n", sizeof("TIM2_INT\n")-1);	
+			usart_send_string(USART1, "TIM2_INT\n", strlen("TIM2_INT\n"));	
 		}
 	}
 }
@@ -227,13 +229,12 @@ void tim3_isr(void)
 	if (timer_get_flag(TIM3, TIM_SR_CC1IF))
 	{
 		timer_clear_flag(TIM3, TIM_SR_CC1IF);
-		usart_send_string(USART1, "Break impulse executed\n", sizeof("Break impulse executed\n")-1);
+		break_set(false);
+		usart_send_string(USART1, "Break impulse executed\n", strlen("Break impulse executed\n"));
 
 	}
 	if (timer_get_flag(TIM3, TIM_SR_UIF))
 	{
 		timer_clear_flag(TIM3, TIM_SR_UIF);
-		usart_send_string(USART1, "TIM3_UP\n", sizeof("TIM3_UP\n")-1);
-		tim3_enable(true);
 	}
 }
