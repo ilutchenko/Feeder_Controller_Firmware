@@ -10,12 +10,12 @@
 #define YELLOW_LED	GPIO12
 #define DEBUGVAL	GPIOB_CRL 
 
-#define GAS_PIN		GPIO1
-#define GAS_PORT	GPIOA
+#define GAS_PIN		GPIO10
+#define GAS_PORT	GPIOB
 
-#define WELD_PIN	GPIO2
-#define WELD_PORT	GPIOA
+#define WELD_PIN	GPIO11
+#define WELD_PORT	GPIOB
 
-#define BREAK_PIN	GPIO3
-#define BREAK_PORT	GPIOA
+#define BREAK_PIN	GPIO6
+#define BREAK_PORT	GPIOB
 #endif

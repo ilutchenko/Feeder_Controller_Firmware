@@ -1,6 +1,6 @@
 APPL_SRC =      sources
 
-BINARY = weldcontroller
+BINARY = feedercontroller
 
 INCLUDE_DIRS =  -I$(APPL_SRC)
 
@@ -8,8 +8,6 @@ INCLUDE_DIRS =  -I$(APPL_SRC)
 SOURCES =       $(APPL_SRC)/gpio.c              \
                 $(APPL_SRC)/rcc.c               \
                 $(APPL_SRC)/usart.c             \
-                $(APPL_SRC)/adc.c               \
-                $(APPL_SRC)/bq76pl455.c               \
                 $(APPL_SRC)/timers.c            
                 
 

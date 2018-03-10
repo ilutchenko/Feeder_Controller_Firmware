@@ -1,16 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <libopencm3/stm32/rcc.h>
+#include <libopencm3/stm32/crc.h>
 #include <libopencm3/stm32/gpio.h>
-#include <libopencm3/stm32/usart.h>
-#include <libopencm3/stm32/i2c.h>
 #include <libopencm3/cm3/nvic.h>
 #include "usart.h"
-#include "bq76pl455.h"
-uint8_t testdata[8] = {1, 2, 3, 4, 5, 6, 7, 8};
-uint16_t voltageArray[16];
-static char help_msg[] = "Welding automatic controller: \n   Hardware version: 0.1 \n   Firmware version: 1.0 \n";
+#include "timers.h"
+static uint8_t help_msg[] = "Welding automatic controller: \n   Hardware version: 0.1 \n   Firmware version: 1.0 \n";
 static uint8_t resiever1[50];
 static uint8_t rec_len1;
 static uint8_t resiever2[50];
@@ -19,6 +17,7 @@ USART_t usart1;
 USART_t usart2;
 USART_t usart3;
 extern void gas_set(uint8_t val);
+extern void break_set(uint8_t val);
 extern void welding_set(uint8_t val);
 extern void break_motor(void);
 
@@ -128,7 +127,7 @@ void usart1_isr(void)
 		if (tmp == '\n')
 		{
 			resiever1[rec_len1++] = 0;	/* Make null-terminated string */
-			process_command(resiever1);
+			process_command(resiever1, rec_len1-2);
 			rec_len1 = 0;
 		}else{
 			resiever1[rec_len1++] = tmp;
@@ -183,7 +182,7 @@ void usart2_isr(void)
 		if (tmp == '\n')
 		{
 			resiever2[rec_len2++] = 0;	/* Make null-terminated string */
-			process_command(resiever2);
+			process_command(resiever2, rec_len2-2);
 			rec_len2 = 0;
 		}else{
 			resiever2[rec_len2++] = tmp;
@@ -209,7 +208,7 @@ void usart2_isr(void)
 					usart2.data3 = (*usart2.global_pointer >> 8) & 0xff;
 					usart2.data4 = (*usart2.global_pointer) & 0xff;
 					usart2.data_pointer = &usart2.data1;
-					usart_send(USART2, *usart1.data_pointer++);
+					usart_send(USART2, *usart2.data_pointer++);
 				}else{
 					//Disable the TXE interrupt as we don't need it anymore. 
 					USART_CR1(USART2) &= ~USART_CR1_TXEIE;
@@ -227,59 +226,120 @@ void usart2_isr(void)
 
 void usart_send_string(uint32_t USART, char *BufferPtr, uint16_t Length )
 {
+	uint8_t *strPointer = BufferPtr;
+	uint8_t strCRCpointer[4];
+	uint8_t len = Length;	
+	uint32_t strCRC;
 
-	while ( Length != 0 )
+#ifdef USART_CRC
+	uint8_t len = Length - 1;	/*Ignore \n symbol*/
+	/*But allocate memory for string with \n (+4 for CRC and +1 for \n)*/
+	strPointer = (uint8_t) malloc(len + 5);
+	memcpy(strPointer, BufferPtr, len);
+
+	strCRC = crc_calculate_block(BufferPtr, len-4);
+	strCRCpointer[0] = strCRC >> 24; 	
+	strCRCpointer[1] = strCRC >> 16; 	
+	strCRCpointer[2] = strCRC >> 8; 	
+	strCRCpointer[3] = strCRC & 0xFF; 	
+	/*itoa(strCRC, strCRCpointer, 10);*/
+
+	/*Add 4 CRC bytes to string*/
+	strncat(strPointer, strCRCpointer, 4);
+	strncat(strPointer, "\n", 1);
+
+	/*If CRC defined, we should send more bytes*/
+	len = Length + 4;
+#endif
+	while ( len != 0 )
 	{
-		usart_send_blocking(USART, *BufferPtr);
-		BufferPtr++;
-		Length--;
+		usart_send_blocking(USART, *strPointer);
+		strPointer++;
+		len--;
 	}
 
+#ifdef USART_CRC
+	free(strPointer);
+#endif
 	return;
 }
 
 void usart_send_32(uint32_t USART, uint32_t *data, uint8_t lenth)
 {
-	while (usart1.busy);
-	usart1.busy = 1;	
-	//Divide 32bit to 8bit
-	usart1.data1 = (*data >> 24) & 0xff;
-	usart1.data2 = (*data >> 16) & 0xff;
-	usart1.data3 = (*data >> 8) & 0xff;
-	usart1.data4 = (*data) & 0xff;
-	usart1.lenth = lenth;
-	usart1.byte_counter = 4;
-	usart1.global_pointer = data;
-	usart1.data_pointer = &usart1.data1;	//
-	usart_send_blocking(USART, *usart1.data_pointer++);
-	usart1.byte_counter--;
-	//Enable TxE interrupt
-	USART_CR1(USART) |= USART_CR1_TXEIE;
+	if (USART == USART1){
+		while (usart1.busy);
+		usart1.busy = 1;	
+		//Divide 32bit to 8bit
+		usart1.data1 = (*data >> 24) & 0xff;
+		usart1.data2 = (*data >> 16) & 0xff;
+		usart1.data3 = (*data >> 8) & 0xff;
+		usart1.data4 = (*data) & 0xff;
+		usart1.lenth = lenth;
+		usart1.byte_counter = 4;
+		usart1.global_pointer = data;
+		usart1.data_pointer = &usart1.data1;	//
+		usart_send_blocking(USART, *usart1.data_pointer++);
+		usart1.byte_counter--;
+		//Enable TxE interrupt
+		USART_CR1(USART) |= USART_CR1_TXEIE;
+	}else if (USART == USART2){
+		while (usart2.busy);
+		usart2.busy = 1;	
+		//Divide 32bit to 8bit
+		usart2.data1 = (*data >> 24) & 0xff;
+		usart2.data2 = (*data >> 16) & 0xff;
+		usart2.data3 = (*data >> 8) & 0xff;
+		usart2.data4 = (*data) & 0xff;
+		usart2.lenth = lenth;
+		usart2.byte_counter = 4;
+		usart2.global_pointer = data;
+		usart2.data_pointer = &usart2.data1;	//
+		usart_send_blocking(USART, *usart2.data_pointer++);
+		usart2.byte_counter--;
+		//Enable TxE interrupt
+		USART_CR1(USART) |= USART_CR1_TXEIE;
+	}
 }
 /*
  *@brief Processing input commands
  *@param pointer to resieved string
- */
-void process_command(char *cmd)
+ *@param length of resieved command without \n symbol
+ */ 
+uint8_t process_command(uint8_t *cmd, uint8_t cmdLength)
 {
-	gpio_clear(GREEN_LED_PORT, GREEN_LED);
-	uint16_t t;
+
+#ifdef USART_CRC
+	uint32_t resCRC;
+	/*resCRC = atoi(cmd+cmdLength-4);*/
+	resCRC = (&(cmd+cmdLength-3) << 24 | &(cmd+cmdLength-2) << 16
+			| &(cmd+cmdLength-1) << 8 | &(cmd+cmdLength));
+	if (resCRC != crc_calculate_block(cmd, cmdLength-4))
+	{
+		return -1;
+	}
+
+#endif
 	if (strncmp(cmd, "LED", 3) == 0)
 	{
 		gpio_toggle(GREEN_LED_PORT, GREEN_LED);
 		usart_send_byte(USART1, 'l');
+		return 0;
 	}    
 
 	if (strncmp(cmd, START_STRING, strlen(START_STRING)) == 0)
 	{
+		break_set(false);
 		tim1_enable(true);
+		timer_enable_break_main_output(TIM1);
 		usart_send_string(USART1, "Started\n", strlen("Started\n"));
+		return 0;
 	}
 
 	if (strncmp(cmd, STOP_STRING, strlen(STOP_STRING)) == 0)
 	{
 		break_motor();
 		usart_send_string(USART1, "Stopped\n", strlen("Stopped\n"));
+		return 0;
 	}
 
 	if (strncmp(cmd, SET_PWM_STRING, strlen(SET_PWM_STRING)) == 0)
@@ -292,6 +352,7 @@ void process_command(char *cmd)
 		}else{
 			usart_send_string(USART1, "ERROR\n", strlen("ERROR\n"));
 		}
+		return 0;
 	}
 
 	if (strncmp(cmd, GAS_STRING, strlen(GAS_STRING)) == 0){
@@ -302,46 +363,70 @@ void process_command(char *cmd)
 			gas_set(false);
 			usart_send_string(USART1, "Gas off\n", strlen("Gas off\n"));
 		}
+		return 0;
 	}
 
 	if (strncmp(cmd, WELDING_STRING, strlen(WELDING_STRING)) == 0){
 		if ( atoi(cmd + strlen(WELDING_STRING) + 1) == 1 ){
 			welding_set(true);
-		usart_send_string(USART1, "Welding on\n", strlen("Welding onf\n"));
+			usart_send_string(USART1, "Welding on\n", strlen("Welding onf\n"));
 		}else{
 			welding_set(false);
-		usart_send_string(USART1, "Welding off\n", strlen("Welding off\n"));
+			usart_send_string(USART1, "Welding off\n", strlen("Welding off\n"));
 		}
+		return 0;
 	}
 
 	/* Manual  */
 	if (strncmp(cmd, "info", 4) == 0)
 	{
 		usart_send_string(USART1, help_msg, sizeof(help_msg)-1);
+		return 0;
 	}
+
+	/*Return that command wasn't recognised*/
+	return -1;
 }
 
 void usart_send_data (uint32_t USART, uint32_t *data, uint8_t lenth)
 {
-	while (usart1.busy);
-	usart1.busy = 1;	
-	usart1.lenth = lenth;
-	usart1.byte_counter = 4;
-	usart1.global_pointer = data;
-	usart1.data_pointer = &usart1.data1;	//
-	usart_send_blocking(USART, *usart1.data_pointer++);
-	usart1.byte_counter--;
-	//Enable TxE interrupt
-	USART_CR1(USART) |= USART_CR1_TXEIE;
+	if (USART == USART1)
+	{
+		while (usart1.busy);
+		usart1.busy = 1;	
+		usart1.lenth = lenth;
+		usart1.byte_counter = 4;
+		usart1.global_pointer = data;
+		usart1.data_pointer = &usart1.data1;	//
+		usart_send_blocking(USART, *usart1.data_pointer++);
+		usart1.byte_counter--;
+		//Enable TxE interrupt
+		USART_CR1(USART) |= USART_CR1_TXEIE;
+	}else if (USART == USART2){
+		while (usart2.busy);
+		usart2.busy = 1;	
+		usart2.lenth = lenth;
+		usart2.byte_counter = 4;
+		usart2.global_pointer = data;
+		usart2.data_pointer = &usart2.data1;	//
+		usart_send_blocking(USART, *usart2.data_pointer++);
+		usart2.byte_counter--;
+		//Enable TxE interrupt
+		USART_CR1(USART) |= USART_CR1_TXEIE;
+	}
 }
 
 void usart_send_byte (uint32_t USART, uint8_t data)
 {
-
-	while (usart1.busy);
-	usart_send_blocking(USART, data);
+	if (USART == USART1)
+	{
+		while (usart1.busy);
+		usart_send_blocking(USART, data);
+	}else if (USART == USART2){
+		while (usart2.busy);
+		usart_send_blocking(USART, data);
+	}
 }
-
 double atof (const char *s)
 {
 	// This function stolen from either Rolf Neugebauer or Andrew Tolmach. 
@@ -394,34 +479,47 @@ double atof (const char *s)
 
 void ftoa (float num, uint8_t *str, uint8_t precision)
 {
-    int intpart = num;
-    int intdecimal;
-    int i;
-    float decimal_part;
-    char decimal[20];
+	uint16_t intpart = num;
+	int16_t intdecimal;
+	uint16_t i;
+	float decimal_part;
+	char decimal[20];
 
-    memset(str, 0x0, 20);
-    if (num > (-1) && num < (0))
-    {
-        strcat(str, "-");
-        itoa(num, str+1, 10);
-    }else{
-        itoa(num, str, 10);
-    }
-    strcat(str, ".");
+	memset(str, 0x0, 20);
+	if (num > (-1) && num < (0))
+	{
+		strcat(str, "-");
+		itoa(num, str+1, 10);
+	}else{
+		itoa(num, str, 10);
+	}
+	strcat(str, ".");
 
-    decimal_part = num - intpart;
-    intdecimal = decimal_part * 1000000;
+	decimal_part = num - intpart;
+	intdecimal = decimal_part * 1000000;
 
-    if(intdecimal < 0)
-    {
-        intdecimal = -intdecimal;
-    }
-    itoa(intdecimal, decimal, 10);
-    for(i =0;i < (precision - strlen(decimal));i++)
-    {
-        strcat(str, "0");
-    }
-    strcat(str, decimal);
+	if(intdecimal < 0)
+	{
+		intdecimal = -intdecimal;
+	}
+	itoa(intdecimal, decimal, 10);
+	for(i = 0; i < (precision - strlen(decimal)); i++)
+	{
+		strcat(str, "0");
+	}
+	strcat(str, decimal);
 }
+void convertBaseVersion(uint16_t input, int base, char *output, int digits)
+{
+	int i, remainder;
+	char digitsArray[17] = "0123456789ABCDEF";
 
+
+	for (i = digits; i > 0; i--)
+	{
+		remainder = input % base;
+		input = input / base;
+		output[i - 1] = digitsArray[remainder];
+	}
+	output[digits] = '\0';
+}

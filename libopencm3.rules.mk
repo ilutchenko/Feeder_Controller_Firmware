@@ -29,6 +29,7 @@ endif
 # Executables
 
 PREFIX		?= arm-none-eabi
+#PREFIX		?= arm-unknown-eabi
 
 CC		:= $(PREFIX)-gcc
 CXX		:= $(PREFIX)-g++
@@ -116,7 +117,8 @@ TGT_CXXFLAGS	+= -fno-common -ffunction-sections -fdata-sections
 # C & C++ preprocessor common flags
 
 TGT_CPPFLAGS	+= -MD
-TGT_CPPFLAGS	+= -Wall -Wundef
+#TGT_CPPFLAGS	+= -Wall -Wundef
+TGT_CPPFLAGS	+= -Wundef
 TGT_CPPFLAGS	+= $(DEFS)
 
 ###############################################################################
