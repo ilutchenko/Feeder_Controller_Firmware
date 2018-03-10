@@ -26,18 +26,10 @@ int main(void)
 	break_set(false);
 	usart_init(USART1, 115200, false);
 
-<<<<<<< HEAD:weldcontroller.c
-	adc_init();
-
-	tim1_init();
-	/*tim1_enable(true);*/
-	/*tim2_init();*/
-=======
 	tim1_init();
 	/*tim1_enable(true);*/
 	tim2_init();
 	tim3_init();
->>>>>>> input-pwm:feedercontroller.c
 	usart_send_string(USART1, "Welding controller started \n", strlen("Welding controller started \n"));
 
 	int i;

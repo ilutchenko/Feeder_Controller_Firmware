@@ -348,7 +348,7 @@ uint8_t process_command(uint8_t *cmd, uint8_t cmdLength)
 		usart_send_byte(USART1, pwmVal);
 		if (pwmVal <= 100){
 			tim1_set_pwm(pwmVal);
-			/*usart_send_string(USART1, "PWM updated\n", strlen("PWM updated\n"));*/
+			usart_send_string(USART1, "PWM updated\n", strlen("PWM updated\n"));
 		}else{
 			usart_send_string(USART1, "ERROR\n", strlen("ERROR\n"));
 		}
