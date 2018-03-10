@@ -34098,6 +34098,7 @@ fpu_isr	libopencm3/lib/stm32/f4/vector_nvic.c	/^#pragma weak fpu_isr /;"	d	file:
 fpu_isr	libopencm3/lib/stm32/f7/vector_nvic.c	/^#pragma weak fpu_isr /;"	d	file:
 fpu_isr	libopencm3/lib/stm32/l4/vector_nvic.c	/^#pragma weak fpu_isr /;"	d	file:
 fragment	libopencm3/doc/html/jquery.js	/^(function(){var bH=\/((?:\\((?:\\([^()]+\\)|[^()]+)+\\)|\\[(?:\\[[^\\[\\]]*\\]|['"][^'"]*['"]|[^/;"	p	class:bx
+freqCounter	sources/timers.c	/^uint16_t freqCounter = 0;$/;"	v	typeref:typename:uint16_t
 fsmc_isr	libopencm3/lib/stm32/f1/vector_nvic.c	/^#pragma weak fsmc_isr /;"	d	file:
 fsmc_isr	libopencm3/lib/stm32/f2/vector_nvic.c	/^#pragma weak fsmc_isr /;"	d	file:
 fsmc_isr	libopencm3/lib/stm32/f4/vector_nvic.c	/^#pragma weak fsmc_isr /;"	d	file:

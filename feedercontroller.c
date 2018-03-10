@@ -20,6 +20,8 @@ int main(void)
 {
 	rcc_init();
 	gpio_init();
+	gas_set(false);
+	welding_set(false);
 	usart_init(USART1, 115200, false);
 
 	tim1_init();
@@ -39,21 +41,21 @@ int main(void)
 void sys_tick_handler(void){
 	/*PID regulation here?*/
 }
-
+/*Gas and welding are low-active circuits*/
 void gas_set(uint8_t val)
 {
 	if (val == true)
-		gpio_set(GAS_PORT, GAS_PIN);
-	else 
 		gpio_clear(GAS_PORT, GAS_PIN);
+	else 
+		gpio_set(GAS_PORT, GAS_PIN);
 }
 
 void welding_set(uint8_t val)
 {
 	if (val == true)
-		gpio_set(WELD_PORT, WELD_PIN);
-	else
 		gpio_clear(WELD_PORT, WELD_PIN);
+	else
+		gpio_set(WELD_PORT, WELD_PIN);
 }
 
 void break_motor(void)

@@ -328,6 +328,7 @@ uint8_t process_command(uint8_t *cmd, uint8_t cmdLength)
 	if (strncmp(cmd, START_STRING, strlen(START_STRING)) == 0)
 	{
 		tim1_enable(true);
+		timer_enable_break_main_output(TIM1);
 		usart_send_string(USART1, "Started\n", strlen("Started\n"));
 		return 0;
 	}
@@ -335,6 +336,7 @@ uint8_t process_command(uint8_t *cmd, uint8_t cmdLength)
 	if (strncmp(cmd, STOP_STRING, strlen(STOP_STRING)) == 0)
 	{
 		break_motor();
+		timer_disable_break_main_output(TIM1);
 		usart_send_string(USART1, "Stopped\n", strlen("Stopped\n"));
 		return 0;
 	}

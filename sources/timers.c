@@ -30,7 +30,6 @@ void tim1_init(void)
 	 */
 	timer_set_mode(TIM1, TIM_CR1_CKD_CK_INT,
 			TIM_CR1_CMS_EDGE, TIM_CR1_DIR_UP);
-timer_enable_break_main_output(TIM1);
 	/*
 	 * Please take note that the clock source for STM32 timers
 	 * might not be the raw APB1/APB2 clocks.  In various conditions they
@@ -48,6 +47,8 @@ timer_enable_break_main_output(TIM1);
 	/*Output compare polarity*/
 	timer_set_oc_polarity_low(TIM1, TIM_OC1);
 
+	timer_enable_break_main_output(TIM1);
+	timer_set_oc_idle_state_set(TIM1, TIM_OC1);
 	/* Set the initual output compare value for OC1. */
 	tim1_set_pwm(START_PWM_VALUE);
 
