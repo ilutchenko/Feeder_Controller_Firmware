@@ -4,6 +4,7 @@
 #include "timers.h"
 #include "usart.h"
 extern uint16_t motorFreq; 
+uint16_t freqCounter = 0;
 
 /*
  *PWM timer
@@ -206,12 +207,16 @@ void tim2_isr(void)
 	/*If input capture 1 (rising edge) occurs*/
 	if (timer_get_flag(TIM2, TIM_SR_CC1IF))
 	{ 
-	usart_send_string(USART1, "TIM2_INT\n", sizeof("TIM2_INT\n")-1);
 		timer_clear_flag(TIM2, TIM_SR_CC1IF);
 		uint16_t freq;
 		/* 50 here is timer 2 counting frequency*/
 		freq = (uint16_t)(50 * (TIMER2_TOP / TIM_CCR1(TIM2)));
 		motorFreq = freq;
+		if (freqCounter++ >= 50)
+		{
+			freqCounter = 0;
+			usart_send_string(USART1, "TIM2_INT\n", sizeof("TIM2_INT\n")-1);	
+		}
 	}
 }
 

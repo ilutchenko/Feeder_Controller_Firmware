@@ -1,4 +1,5 @@
 *.swp
+*.swo
 *.swa
 *.o
 *.d

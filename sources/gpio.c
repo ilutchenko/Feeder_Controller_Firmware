@@ -15,7 +15,7 @@ void gpio_init(){
 	gpio_set_mode(GREEN_LED_PORT, GPIO_MODE_OUTPUT_50_MHZ,
 			GPIO_CNF_OUTPUT_PUSHPULL, GREEN_LED);
 
-	/*PWM output pin*/
+	/*PWM output pin PA8*/
 	gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_50_MHZ,
 		      GPIO_CNF_OUTPUT_ALTFN_PUSHPULL,
 		      GPIO_TIM1_CH1);
@@ -23,10 +23,11 @@ void gpio_init(){
 	gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_50_MHZ,
 		      GPIO_CNF_OUTPUT_ALTFN_PUSHPULL,
 		      GPIO_TIM3_CH1);
-	/*Frequency measurement input pin*/
+	/*Frequency measurement input pin PA15*/
+	gpio_primary_remap(AFIO_MAPR_SWJ_CFG_JTAG_OFF_SW_ON, AFIO_MAPR_TIM2_REMAP_PARTIAL_REMAP1);
 	gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_50_MHZ,
-		      GPIO_CNF_INPUT_PULL_UPDOWN,
-		      GPIO_TIM2_CH1_ETR);
+		      GPIO_CNF_INPUT_FLOAT,
+		      GPIO_TIM2_FR_CH1_ETR);
 	/*Enable pins for gas, welding, motor breaking*/
 	gpio_set_mode(GAS_PORT, GPIO_MODE_OUTPUT_50_MHZ,
 			GPIO_CNF_OUTPUT_PUSHPULL, GAS_PIN);
