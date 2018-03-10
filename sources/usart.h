@@ -29,6 +29,7 @@ void usart_send_string(uint32_t USART, char *BufferPtr, uint16_t Length);
 void my_usart_print_int(uint32_t usart, int value);
 uint32_t usart_crc_calc(uint32_t data);
 void ftoa(float num, uint8_t *str, uint8_t precision);
+void convertBaseVersion(uint16_t input, int base, char *output, int digits);
 
 
 #endif

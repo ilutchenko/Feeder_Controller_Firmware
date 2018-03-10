@@ -509,4 +509,17 @@ void ftoa (float num, uint8_t *str, uint8_t precision)
 	}
 	strcat(str, decimal);
 }
+void convertBaseVersion(uint16_t input, int base, char *output, int digits)
+{
+	int i, remainder;
+	char digitsArray[17] = "0123456789ABCDEF";
 
+
+	for (i = digits; i > 0; i--)
+	{
+		remainder = input % base;
+		input = input / base;
+		output[i - 1] = digitsArray[remainder];
+	}
+	output[digits] = '\0';
+}

@@ -207,18 +207,31 @@ void tim1_cc_isr (void)
 /*Motor square wave rising edge interrupt*/
 void tim2_isr(void)
 {
+	uint8_t str[20];
+	uint16_t freq;
 	/*If input capture 1 (rising edge) occurs*/
 	if (timer_get_flag(TIM2, TIM_SR_CC1IF))
 	{ 
 		timer_clear_flag(TIM2, TIM_SR_CC1IF);
-		uint16_t freq;
 		/* 50 here is timer 2 counting frequency*/
-		freq = (uint16_t)(50 * (TIMER2_TOP / TIM_CCR1(TIM2)));
-		motorFreq = freq;
+		freq = (50 * (TIMER2_TOP / TIM_CCR1(TIM2)));
+		/*freq = 1 / (0.02 * (TIMER2_TOP / TIM_CCR1(TIM2)));*/
+		/*freq = (50 * (TIMER2_TOP / TIM_CCR1(TIM2)));*/
+		/*freq = 123;*/
+		motorFreq = (uint16_t)freq;
 		if (freqCounter++ >= 50)
 		{
+			/*ftoa(freq, str, 1);*/
 			freqCounter = 0;
-			usart_send_string(USART1, "TIM2_INT\n", strlen("TIM2_INT\n"));	
+			/*usart_send_string(USART1, "TIM2_INT\n", strlen("TIM2_INT\n"));	*/
+			usart_send_string(USART1, "FREQ: ", strlen("FREQ: "));	
+			convertBaseVersion(motorFreq, 10, str, 3);
+			usart_send_string(USART1, str, 3);	
+
+			/*usart_send_string(USART1, str, 3);*/
+			/*usart_send_byte(USART1, motorFreq >> 8);*/
+			/*usart_send_byte(USART1, motorFreq & 0xFF);*/
+			usart_send_string(USART1, "\n", 1);
 		}
 	}
 }
