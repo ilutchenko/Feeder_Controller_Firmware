@@ -29,5 +29,6 @@ void tim1_enable(uint8_t param);
 void tim3_enable(uint8_t param);
 void tim1_set_pwm (uint8_t pwm);
 void tim3_set_pwm (uint16_t pwm);
+void systick_setup(void);
 
 #endif

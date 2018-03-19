@@ -8,6 +8,7 @@
 #include <libopencm3/cm3/nvic.h>
 #include "usart.h"
 #include "timers.h"
+#include "adc.h"
 static uint8_t help_msg[] = "Welding automatic controller: \n   Hardware version: 0.1 \n   Firmware version: 1.0 \n";
 static uint8_t resiever1[50];
 static uint8_t rec_len1;
@@ -376,7 +377,21 @@ uint8_t process_command(uint8_t *cmd, uint8_t cmdLength)
 		}
 		return 0;
 	}
-
+	if(strncmp(cmd, "TEMP", 4) == 0)
+	{
+		adc_get_temperature();
+		/*gpio_toggle(GREEN_LED_PORT, GREEN_LED);*/
+		/*UART0_send("\nStarted\n", 9);*/
+	}    
+	if(strncmp(cmd, "ADC", 3) == 0)
+	{
+		uint16_t t = 0;
+		t = adc_get();
+		usart_send_byte(USART1, (t >> 8) & 0xFF);
+		usart_send_byte(USART1, t & 0xFF);
+		/*gpio_toggle(GREEN_LED_PORT, GREEN_LED);*/
+		/*UART0_send("\nStarted\n", 9);*/
+	}    
 	/* Manual  */
 	if (strncmp(cmd, "info", 4) == 0)
 	{

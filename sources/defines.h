@@ -18,4 +18,10 @@
 
 #define BREAK_PIN	GPIO6
 #define BREAK_PORT	GPIOB
+
+#define WELD_GUN_PIN	GPIO7
+#define WELD_GUN_PORT	GPIOB
+
+#define SWITCH_PIN	GPIO5
+#define SWITCH_PORT	GPIOA
 #endif

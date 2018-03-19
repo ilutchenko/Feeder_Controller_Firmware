@@ -10,6 +10,12 @@ void gpio_init(){
 	rcc_periph_clock_enable(RCC_GPIOA);
 	rcc_periph_clock_enable(RCC_GPIOB);
 
+	gpio_set_mode(WELD_GUN_PORT, GPIO_MODE_INPUT,
+			GPIO_CNF_INPUT_FLOAT, WELD_GUN_PIN);
+	gpio_set_mode(SWITCH_PORT, GPIO_MODE_INPUT,
+			GPIO_CNF_INPUT_FLOAT, SWITCH_PIN);
+	/*gpio_set_mode(WELD_GUN_PORT, GPIO_MODE_OUTPUT_50_MHZ,*/
+			/*GPIO_CNF_OUTPUT_PUSHPULL, WELD_GUN_PIN);*/
 	/* Enable led as output */
 	/*Green for BLuePill*/
 	gpio_set_mode(GREEN_LED_PORT, GPIO_MODE_OUTPUT_50_MHZ,
@@ -37,4 +43,11 @@ void gpio_init(){
 			GPIO_CNF_OUTPUT_PUSHPULL, BREAK_PIN);
 
 }
+
+/*
+ *void gpio_isr()
+ *{
+ *        
+ *}
+ */
 #endif

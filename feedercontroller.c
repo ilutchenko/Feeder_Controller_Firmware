@@ -9,6 +9,7 @@
 #include "sources/rcc.h"
 #include "sources/usart.h"
 #include "sources/timers.h"
+#include "sources/adc.h"
 #include "sources/defines.h"
 #include <string.h>
 uint16_t motorFreq; 
@@ -17,6 +18,7 @@ void gas_set(uint8_t val);
 void break_set(uint8_t val);
 void welding_set(uint8_t val);
 void break_motor(void);
+uint8_t channel_array[16];
 int main(void)
 {
 	rcc_init();
@@ -24,13 +26,23 @@ int main(void)
 	gas_set(false);
 	welding_set(false);
 	break_set(false);
-	usart_init(USART1, 115200, false);
 
 	tim1_init();
 	/*tim1_enable(true);*/
 	tim2_init();
 	tim3_init();
+	adc_init();
+	/* Select the channel we want to convert. 16=temperature_sensor. */
+	channel_array[0] = 16;
+	/* Set the injected sequence here, with number of channels */
+	adc_set_regular_sequence(ADC1, 1, channel_array);
+
+	channel_array[0] = 8;
+	/* Set the injected sequence here, with number of channels */
+	adc_set_regular_sequence(ADC2, 1, channel_array);
+	usart_init(USART1, 115200, false);
 	usart_send_string(USART1, "Welding controller started \n", strlen("Welding controller started \n"));
+	systick_setup();
 
 	int i;
 	while (1) {
@@ -41,7 +53,17 @@ int main(void)
 
 }
 void sys_tick_handler(void){
+uint16_t adcVal;
 	/*PID regulation here?*/
+	if(!gpio_get(SWITCH_PORT, SWITCH_PIN))
+	{
+		adcVal = adc_get();
+		adcVal = (uint16_t)(adcVal /0x0FFF * 100);
+		if(!gpio_get(WELD_GUN_PORT, WELD_GUN_PIN))
+		{
+			tim1_set_pwm(adcVal);	// look like don't work again =)		
+		}
+	}
 }
 /*Gas, break and welding are low-active circuits*/
 void gas_set(uint8_t val)

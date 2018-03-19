@@ -7,6 +7,7 @@ INCLUDE_DIRS =  -I$(APPL_SRC)
 
 SOURCES =       $(APPL_SRC)/gpio.c              \
                 $(APPL_SRC)/rcc.c               \
+                $(APPL_SRC)/adc.c               \
                 $(APPL_SRC)/usart.c             \
                 $(APPL_SRC)/timers.c            
                 

@@ -2,6 +2,7 @@
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/cm3/nvic.h>
 #include <libopencm3/stm32/gpio.h>
+#include <libopencm3/cm3/systick.h>
 #include "timers.h"
 #include "usart.h"
 extern uint16_t motorFreq; 
@@ -145,7 +146,20 @@ void tim3_init(void)
 	timer_enable_irq(TIM3, (TIM_DIER_CC1IE));
 
 }
+void systick_setup(void)
+{
+	/* 72MHz / 8 => 9000000 counts per second */
+	systick_set_clocksource(STK_CSR_CLKSOURCE_AHB_DIV8);
 
+	/* 9000000/90000 = 100 overflows per second - every 1ms one interrupt */
+	/* SysTick interrupt every N clock pulses: set reload to N-1 */
+	systick_set_reload(89999);
+
+	systick_interrupt_enable();
+
+	/* Start counting. */
+	systick_counter_enable();
+}
 void tim1_enable(uint8_t param)
 {
 	if (param == true)
@@ -208,16 +222,13 @@ void tim1_cc_isr (void)
 void tim2_isr(void)
 {
 	uint8_t str[20];
-	uint16_t freq;
+	float freq;
 	/*If input capture 1 (rising edge) occurs*/
 	if (timer_get_flag(TIM2, TIM_SR_CC1IF))
 	{ 
 		timer_clear_flag(TIM2, TIM_SR_CC1IF);
 		/* 50 here is timer 2 counting frequency*/
-		freq = (50 * (TIMER2_TOP / TIM_CCR1(TIM2)));
-		/*freq = 1 / (0.02 * (TIMER2_TOP / TIM_CCR1(TIM2)));*/
-		/*freq = (50 * (TIMER2_TOP / TIM_CCR1(TIM2)));*/
-		/*freq = 123;*/
+		freq = ((TIMER2_TOP / TIM_CCR1(TIM2)) * 50);
 		motorFreq = (uint16_t)freq;
 		if (freqCounter++ >= 50)
 		{
