@@ -13,7 +13,11 @@
 #include "sources/defines.h"
 #include <string.h>
 uint16_t motorFreq; 
+extern uint16_t weldExtiInt;
+extern uint8_t weldPinStatus;
 
+void initiate_start_sequence(void);
+void initiate_stop_sequence(void);
 void gas_set(uint8_t val);
 void break_set(uint8_t val);
 void welding_set(uint8_t val);
@@ -54,15 +58,47 @@ int main(void)
 }
 void sys_tick_handler(void){
 uint16_t adcVal;
+float div;
 	/*PID regulation here?*/
 	if(!gpio_get(SWITCH_PORT, SWITCH_PIN))
 	{
 		adcVal = adc_get();
-		adcVal = (uint16_t)(adcVal /0x0FFF * 100);
-		if(!gpio_get(WELD_GUN_PORT, WELD_GUN_PIN))
+		/*adcVal = (uint16_t)(adcVal /0x0FFF * 100);*/
+		div = adcVal / 4095.0;
+		div = div * 100;
+		adcVal = (uint16_t)div;
+		/*
+		 *usart_send_string(USART1, "ADC: ", 5);
+		 *usart_send_byte(USART1, adcVal >> 8);
+		 *usart_send_byte(USART1, adcVal & 0xFF);
+		 *usart_send_string(USART1, "\n", 1);
+		 */
+
+		if (weldExtiInt != 0)
 		{
-			tim1_set_pwm(adcVal);	// look like don't work again =)		
+			/*usart_send_string(USART1, "Exti != 0\n", 10);*/
+			if (weldExtiInt-- == 1)
+			{
+				/*usart_send_string(USART1, "Exti = 1\n", 9);*/
+				if (gpio_get(WELD_GUN_PORT, WELD_GUN_PIN) == weldPinStatus)
+				{
+					/*usart_send_string(USART1, "WPST\n", 5);*/
+					if (gpio_get(WELD_GUN_PORT, WELD_GUN_PIN) == 0)
+					{
+						initiate_start_sequence();
+					}else{
+						initiate_stop_sequence();
+					}
+				}
+			}
 		}
+		/*
+		 *if(!gpio_get(WELD_GUN_PORT, WELD_GUN_PIN))
+		 *{
+		 *        [>usart_send_string(USART1, "Button pressed\n", strlen("Button pressed\n"));<]
+		 *        tim1_set_pwm(adcVal);	// look like don't work again =)		
+		 *}
+		 */
 	}
 }
 /*Gas, break and welding are low-active circuits*/
@@ -96,4 +132,13 @@ void break_motor(void)
 	tim1_enable(false);
 	tim3_enable(true);
 	/*gpio_set(BREAK_PORT, BREAK_PIN);*/
+}
+void initiate_start_sequence(void)
+{
+	usart_send_string(USART1, "START\n", 6);
+}
+
+void initiate_stop_sequence(void)
+{
+	usart_send_string(USART1, "STOP\n", 5);
 }
