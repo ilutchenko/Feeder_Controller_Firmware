@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <string.h>
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/f1/nvic.h>
 #include <libopencm3/cm3/nvic.h>
@@ -11,11 +12,13 @@
 #include "sources/timers.h"
 #include "sources/adc.h"
 #include "sources/defines.h"
-#include <string.h>
+
 uint16_t motorFreq; 
+uint8_t sequence = 0;
+uint8_t task = 0;
 extern uint16_t weldExtiInt;
 extern uint8_t weldPinStatus;
-
+void process_task(void);
 void initiate_start_sequence(void);
 void initiate_stop_sequence(void);
 void gas_set(uint8_t val);
@@ -31,10 +34,12 @@ int main(void)
 	welding_set(false);
 	break_set(false);
 
+	usart_init(USART1, 115200, false);
+
 	tim1_init();
-	/*tim1_enable(true);*/
 	tim2_init();
 	tim3_init();
+	tim4_init();
 	adc_init();
 	/* Select the channel we want to convert. 16=temperature_sensor. */
 	channel_array[0] = 16;
@@ -44,7 +49,6 @@ int main(void)
 	channel_array[0] = 8;
 	/* Set the injected sequence here, with number of channels */
 	adc_set_regular_sequence(ADC2, 1, channel_array);
-	usart_init(USART1, 115200, false);
 	usart_send_string(USART1, "Welding controller started \n", strlen("Welding controller started \n"));
 	systick_setup();
 
@@ -63,42 +67,24 @@ float div;
 	if(!gpio_get(SWITCH_PORT, SWITCH_PIN))
 	{
 		adcVal = adc_get();
-		/*adcVal = (uint16_t)(adcVal /0x0FFF * 100);*/
 		div = adcVal / 4095.0;
 		div = div * 100;
 		adcVal = (uint16_t)div;
-		/*
-		 *usart_send_string(USART1, "ADC: ", 5);
-		 *usart_send_byte(USART1, adcVal >> 8);
-		 *usart_send_byte(USART1, adcVal & 0xFF);
-		 *usart_send_string(USART1, "\n", 1);
-		 */
+		tim1_set_pwm(adcVal);
 
 		if (weldExtiInt != 0)
 		{
 			/*usart_send_string(USART1, "Exti != 0\n", 10);*/
 			if (weldExtiInt-- == 1)
 			{
-				/*usart_send_string(USART1, "Exti = 1\n", 9);*/
-				if (gpio_get(WELD_GUN_PORT, WELD_GUN_PIN) == weldPinStatus)
+				if (!gpio_get(WELD_GUN_PORT, WELD_GUN_PIN))
 				{
-					/*usart_send_string(USART1, "WPST\n", 5);*/
-					if (gpio_get(WELD_GUN_PORT, WELD_GUN_PIN) == 0)
-					{
-						initiate_start_sequence();
-					}else{
-						initiate_stop_sequence();
-					}
+					initiate_start_sequence();
+				}else{
+					initiate_stop_sequence();
 				}
 			}
 		}
-		/*
-		 *if(!gpio_get(WELD_GUN_PORT, WELD_GUN_PIN))
-		 *{
-		 *        [>usart_send_string(USART1, "Button pressed\n", strlen("Button pressed\n"));<]
-		 *        tim1_set_pwm(adcVal);	// look like don't work again =)		
-		 *}
-		 */
 	}
 }
 /*Gas, break and welding are low-active circuits*/
@@ -131,14 +117,61 @@ void break_motor(void)
 	break_set(true);
 	tim1_enable(false);
 	tim3_enable(true);
-	/*gpio_set(BREAK_PORT, BREAK_PIN);*/
 }
 void initiate_start_sequence(void)
 {
-	usart_send_string(USART1, "START\n", 6);
+	gas_set(true);
+	sequence = START_SEQUENCE;
+	usart_send_string(USART1, "START GAS_TASK\n", strlen("START GAS_TASK\n"));
+	task = WELD_TASK;
+	tim4_set_pwm(500);
+	tim4_enable(true);
 }
 
 void initiate_stop_sequence(void)
 {
-	usart_send_string(USART1, "STOP\n", 5);
+	break_motor();
+	sequence = STOP_SEQUENCE;
+	usart_send_string(USART1, "STOP MOTOR_TASK\n", strlen("STOP MOTOR_TASK\n"));
+	task = WELD_TASK;
+	tim4_set_pwm(100);
+	tim4_enable(true);
+}
+
+void process_task(void)
+{
+	if (sequence == START_SEQUENCE)
+	{
+		switch (task)
+		{
+			case (WELD_TASK):
+				usart_send_string(USART1, "START WELD_TASK\n", strlen("START WELD_TASK\n"));
+				welding_set(true);
+				task = MOTOR_TASK;
+				tim4_set_pwm(100);
+				tim4_enable(true);
+				break;
+			case (MOTOR_TASK):
+				usart_send_string(USART1, "START MOTOR_TASK\n", strlen("START MOTOR_TASK\n"));
+				break_set(false);
+				tim1_enable(true);
+				timer_enable_break_main_output(TIM1);
+				break;
+		}
+	}else if (sequence == STOP_SEQUENCE){
+		switch (task)
+		{
+			case (WELD_TASK):
+				usart_send_string(USART1, "STOP WELD_TASK\n", strlen("STOP WELD_TASK\n"));
+				welding_set(false);
+				task = GAS_TASK; 
+				tim4_set_pwm(500);
+				tim4_enable(true);
+				break;
+			case (GAS_TASK):
+				usart_send_string(USART1, "STOP GAS_TASK\n", strlen("STOP GAS_TASK\n"));
+				gas_set(false);
+				break;
+		}
+	}
 }

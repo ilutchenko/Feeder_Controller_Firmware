@@ -19,8 +19,6 @@ void gpio_init(){
 	/*Automatic\manual switch*/
 	gpio_set_mode(SWITCH_PORT, GPIO_MODE_INPUT,
 			GPIO_CNF_INPUT_FLOAT, SWITCH_PIN);
-	/*gpio_set_mode(WELD_GUN_PORT, GPIO_MODE_OUTPUT_50_MHZ,*/
-			/*GPIO_CNF_OUTPUT_PUSHPULL, WELD_GUN_PIN);*/
 	/* Enable led as output */
 	/*Green for BLuePill*/
 	gpio_set_mode(GREEN_LED_PORT, GPIO_MODE_OUTPUT_50_MHZ,
@@ -59,21 +57,19 @@ void exti9_5_isr(void)
 {
 	exti_line_state = GPIOB_IDR;
 
-	if (exti_get_flag_status(EXTI7) && (weldExtiInt == 0))
+	if (exti_get_flag_status(EXTI7))
 	{
+		if (weldExtiInt == 0)
+		{
 	weldExtiInt = 50;
 	weldPinStatus = gpio_get(WELD_GUN_PORT, WELD_GUN_PIN);
+					usart_send_string(USART1, "WPST: ", 6);
+					usart_send_byte(USART1, weldPinStatus);
+					usart_send_byte(USART1, '\n');
 
 	/*usart_send_string(USART1, "Button interrupt \n", strlen("Button interrupt \n"));*/
-	/* The LED (PC12) is on, but turns off when the button is pressed. */
-	/*
-	 *if ((exti_line_state & (1 << 0)) != 0) {
-	 *        gpio_clear(GPIOC, GPIO12);
-	 *} else {
-	 *        gpio_set(GPIOC, GPIO12);
-	 *}
-	 */
-	}
+		}
 	exti_reset_request(EXTI7);
+	}
 }
 #endif

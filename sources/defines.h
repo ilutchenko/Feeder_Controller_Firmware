@@ -1,13 +1,21 @@
 #ifndef DEFINES_H
 #define DEFINES_H
 
-#define COMPARE_STEP 50
+//Task defines
+#define WELD_TASK	1
+#define MOTOR_TASK	2
+#define GAS_TASK	3
+
+#define START_SEQUENCE	1
+#define STOP_SEQUENCE	0
+#define COMPARE_STEP 	50
 #define GREEN_LED_PORT	GPIOC
 #define GREEN_LED	GPIO13
 #define RED_LED_PORT	GPIOB
 #define RED_LED		GPIO13
 #define YELLOW_LED_PORT GPIOB
 #define YELLOW_LED	GPIO12
+
 #define DEBUGVAL	GPIOB_CRL 
 
 #define GAS_PIN		GPIO10
@@ -24,4 +32,5 @@
 
 #define SWITCH_PIN	GPIO5
 #define SWITCH_PORT	GPIOA
+
 #endif

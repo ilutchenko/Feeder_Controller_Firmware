@@ -6,8 +6,11 @@
 #include "timers.h"
 #include "usart.h"
 extern uint16_t motorFreq; 
+extern uint8_t sequence;
+extern uint8_t task;
 uint16_t freqCounter = 0;
 extern void break_set(uint8_t val);
+extern void process_task(void);
 /*
  *PWM timer
  *Freq: 39 KHz
@@ -131,19 +134,52 @@ void tim3_init(void)
 	/*Output compare polarity*/
 	timer_set_oc_polarity_low(TIM3, TIM_OC1);
 
-	/*timer_enable_break_main_output(TIM3);*/
-	/*timer_set_oc_idle_state_set(TIM3, TIM_OC1);*/
 	/* Set the initual output compare value for OC1. */
 	tim3_set_pwm(BREAK_IMPULSE_LENTH);
-	/*timer_set_oc_value(TIM3, TIM_OC1, BREAK_IMPULSE_LENTH); */
 
-	/*timer_enable_oc_output(TIM3, TIM_OC1);*/
 	/* Enable TIM3 interrupt. */
 	nvic_enable_irq(NVIC_TIM3_IRQ);
 
 	/*Enable timer 3 overflow and compare int */
 	/*timer_enable_irq(TIM3, (TIM_DIER_UIE));*/
 	timer_enable_irq(TIM3, (TIM_DIER_CC1IE));
+
+}
+/*
+ *Timer 4 used to process start/stop sequences wit delays
+ */
+void tim4_init(void)
+{
+	/* Enable TIM4 clock. */
+	rcc_periph_clock_enable(RCC_TIM4);
+	/* Reset TIM4 peripheral to defaults. */
+	rcc_periph_reset_pulse(RST_TIM4);
+
+
+	/* Timer global mode:
+	 * - No divider
+	 * - Alignment edge
+	 * - Direction up
+	 */
+	timer_set_mode(TIM4, TIM_CR1_CKD_CK_INT,
+			TIM_CR1_CMS_EDGE, TIM_CR1_DIR_UP);
+
+	/*Set cycle duty to 1 seconds*/
+	timer_set_prescaler(TIM4, TIMER4_PRESCALER);
+	timer_set_period(TIM4, TIMER4_TOP);
+
+	/* Disable preload. */
+	timer_disable_preload(TIM4);
+	timer_one_shot_mode(TIM4);
+		timer_set_counter(TIM4, 0);
+	/* Enable TIM4 interrupt. */
+	nvic_enable_irq(NVIC_TIM4_IRQ);
+	nvic_set_priority(23, 1),
+	nvic_set_priority(30, 2),
+
+	/*Enable timer 4 overflow and compare int */
+	timer_enable_irq(TIM4, (TIM_DIER_UIE));
+	timer_enable_irq(TIM4, (TIM_DIER_CC1IE));
 
 }
 void systick_setup(void)
@@ -175,9 +211,24 @@ void tim3_enable(uint8_t param)
 		/* Counter enable. */
 		timer_enable_counter(TIM3);
 	}
-	else if (param == false)
+	else if (param == false){
 		timer_disable_counter(TIM3);
+		timer_set_counter(TIM3, 0);
 }
+}
+
+void tim4_enable(uint8_t param)
+{
+	if (param == true){
+		/* Counter enable. */
+		timer_enable_counter(TIM4);
+	}
+	else if (param == false){
+		timer_disable_counter(TIM4);
+		timer_set_counter(TIM4, 0);
+	}
+}
+
 /* @brief Sets PWM duty
  * @param PWM duty in percents
  * */
@@ -194,8 +245,22 @@ void tim1_set_pwm (uint8_t pwm)
 void tim3_set_pwm (uint16_t pwm)
 {
 	uint16_t compareVal;
-	compareVal = (uint16_t)((pwm / 1000) * (TIMER3_TOP / 3));
+	compareVal = (uint16_t)((pwm / 1000.0) * (TIMER3_TOP / 3));
 	timer_set_oc_value(TIM3, TIM_OC1, compareVal); 
+}
+
+/* @brief Sets task delay
+ * @param delay in ms
+*/
+void tim4_set_pwm (uint16_t pwm)
+{
+	uint16_t compareVal;
+	float div;
+	div = pwm / 1000.0;
+	div = div * TIMER4_TOP;
+	compareVal = (uint16_t)div;
+	timer_set_oc_value(TIM4, TIM_OC1, compareVal); 
+	compareVal = TIM4_CCR1;
 }
 
 /*
@@ -206,7 +271,6 @@ void tim1_up_isr(void)
 {
 	/* Clear update interrupt flag. */
 	timer_clear_flag(TIM1, TIM_SR_UIF);
-	/*gpio_set(RED_LED_PORT, RED_LED);*/
 	gpio_clear(GREEN_LED_PORT, GREEN_LED);
 }
 
@@ -215,7 +279,6 @@ void tim1_cc_isr (void)
 	/* Clear compare interrupt flag. */
 	timer_clear_flag(TIM1, TIM_SR_CC1IF);
 	gpio_set(GREEN_LED_PORT, GREEN_LED);
-	/*gpio_clear(RED_LED_PORT, RED_LED);*/
 }
 
 /*Motor square wave rising edge interrupt*/
@@ -228,20 +291,15 @@ void tim2_isr(void)
 	{ 
 		timer_clear_flag(TIM2, TIM_SR_CC1IF);
 		/* 50 here is timer 2 counting frequency*/
-		freq = ((TIMER2_TOP / TIM_CCR1(TIM2)) * 50);
+		freq = ((TIMER2_TOP / (float)TIM_CCR1(TIM2)) * 50);
 		motorFreq = (uint16_t)freq;
-		if (freqCounter++ >= 50)
+		if (freqCounter++ >= 150)
 		{
-			/*ftoa(freq, str, 1);*/
 			freqCounter = 0;
-			/*usart_send_string(USART1, "TIM2_INT\n", strlen("TIM2_INT\n"));	*/
 			usart_send_string(USART1, "FREQ: ", strlen("FREQ: "));	
 			convertBaseVersion(motorFreq, 10, str, 3);
 			usart_send_string(USART1, str, 3);	
 
-			/*usart_send_string(USART1, str, 3);*/
-			/*usart_send_byte(USART1, motorFreq >> 8);*/
-			/*usart_send_byte(USART1, motorFreq & 0xFF);*/
 			usart_send_string(USART1, "\n", 1);
 		}
 	}
@@ -260,5 +318,24 @@ void tim3_isr(void)
 	if (timer_get_flag(TIM3, TIM_SR_UIF))
 	{
 		timer_clear_flag(TIM3, TIM_SR_UIF);
+	}
+}
+
+/*Sequence task processing interrupt*/
+void tim4_isr(void)
+{
+
+	if (timer_get_flag(TIM4, TIM_SR_CC1IF))
+	{
+		timer_clear_flag(TIM4, TIM_SR_CC1IF);
+		/*usart_send_string(USART1, "Task processing\n", strlen("Task processing\n"));*/
+		tim4_enable(false);
+		process_task();
+
+	}
+	if (timer_get_flag(TIM4, TIM_SR_UIF))
+	{
+		timer_clear_flag(TIM4, TIM_SR_UIF);
+		usart_send_string(USART1, "Tim4 overflow\n", strlen("Tim4 overflow\n"));
 	}
 }
