@@ -8,11 +8,12 @@
 #include <libopencm3/stm32/usart.h>
 #include <libopencm3/stm32/i2c.h>
 #include <libopencm3/stm32/dma.h>
+#include <libopencm3/stm32/timer.h>
 #include <libopencm3/cm3/nvic.h>
 #include "usart.h"
 
 
-static char help_msg[] = "Battery management system: \n   Hardware version: 2.0 \n   Firmware version: 1.0 \n   CANopen objects: N/A \n";
+static char help_msg[] = "Feeder control system: \n   Hardware version: 0.1 \n   Firmware version: 0.1 \n   CANopen objects: N/A \n";
 static uint8_t resiever1[50];
 static uint8_t rec_len1;
 static uint8_t resiever2[50];
@@ -333,7 +334,11 @@ void process_command(char *cmd)
 		/* Manual  */
 	if(strncmp(cmd, "info", 4) == 0)
 	{
-		usart_send_string(USART1, help_msg, sizeof(help_msg)-1);
+		usart_printf(USART1, help_msg);
+	}
+	if(strncmp(cmd, "TIM", 3) == 0)
+	{
+		usart_printf(USART1, "TIM4 = %d\n", timer_get_counter(TIM4));
 	}
 }
 

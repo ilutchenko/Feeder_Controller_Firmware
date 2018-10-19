@@ -13,19 +13,26 @@
 #include "sources/adc.h"
 #include "sources/defines.h"
 
+Data_t *d;
+
 uint16_t motorFreq; 
 uint8_t sequence = 0;
 uint8_t task = 0;
+uint8_t channel_array[16];
+
 extern uint16_t weldExtiInt;
 extern uint8_t weldPinStatus;
-void process_task(void);
-void initiate_start_sequence(void);
-void initiate_stop_sequence(void);
+void process_task(Tasks_t *task);
+void initiate_start_sequence(Tasks_t *task);
+void initiate_stop_sequence(Tasks_t *task);
+void task_set_delay(Tasks_t *task, uint16_t delay);
 void gas_set(uint8_t val);
 void break_set(uint8_t val);
 void welding_set(uint8_t val);
 void break_motor(void);
-uint8_t channel_array[16];
+void calculate_speed(Encoder_t *enc);
+int init_varables(void);
+
 int main(void)
 {
 	rcc_init();
@@ -36,6 +43,8 @@ int main(void)
 
 	usart_init(USART1, 115200, false);
 
+
+	init_varables();
 	tim1_init();
 	tim2_init();
 	tim3_init();
@@ -64,6 +73,23 @@ void sys_tick_handler(void){
 uint16_t adcVal;
 float div;
 	/*PID regulation here?*/
+	if(d->tasks->sequence != STOPPED_SEQUENCE)
+	{
+		d->tasks->timeout--;
+		if (d->tasks->timeout == 0)
+		{
+			process_task(d->tasks);
+		}
+	}
+	if (d->encoder->systics-- == 0)
+	{	
+		d->encoder->systics = ENCODER_SYSTICS;
+		d->encoder->previous_cnt = d->encoder->current_cnt;
+		d->encoder->current_cnt = timer_get_counter(TIM4);
+		calculate_speed(d->encoder);
+		usart_printf(USART1, "SPEED: %f mm/sec\n", d->encoder->speed_mm);
+
+	}
 	if(!gpio_get(SWITCH_PORT, SWITCH_PIN))
 	{
 		adcVal = adc_get();
@@ -79,9 +105,9 @@ float div;
 			{
 				if (!gpio_get(WELD_GUN_PORT, WELD_GUN_PIN))
 				{
-					initiate_start_sequence();
+					initiate_start_sequence(d->tasks);
 				}else{
-					initiate_stop_sequence();
+					initiate_stop_sequence(d->tasks);
 				}
 			}
 		}
@@ -118,38 +144,42 @@ void break_motor(void)
 	tim1_enable(false);
 	tim3_enable(true);
 }
-void initiate_start_sequence(void)
+
+void initiate_start_sequence(Tasks_t *task)
 {
 	gas_set(true);
-	sequence = START_SEQUENCE;
+	task->sequence = START_SEQUENCE;
 	usart_send_string(USART1, "START GAS_TASK\n", strlen("START GAS_TASK\n"));
-	task = WELD_TASK;
-	tim4_set_pwm(500);
-	tim4_enable(true);
+	task->subtask = WELD_TASK;
+	/*tim4_set_pwm(500);*/
+	task_set_delay(task, 500);
+	/*tim4_enable(true);*/
 }
 
-void initiate_stop_sequence(void)
+void initiate_stop_sequence(Tasks_t *task)
 {
 	break_motor();
-	sequence = STOP_SEQUENCE;
+	task->sequence = STOP_SEQUENCE;
 	usart_send_string(USART1, "STOP MOTOR_TASK\n", strlen("STOP MOTOR_TASK\n"));
-	task = WELD_TASK;
-	tim4_set_pwm(100);
-	tim4_enable(true);
+	task->subtask = WELD_TASK;
+	/*tim4_set_pwm(100);*/
+	task_set_delay(task, 100);
+	/*tim4_enable(true);*/
 }
 
-void process_task(void)
+void process_task(Tasks_t *task)
 {
-	if (sequence == START_SEQUENCE)
+	if (task->sequence == START_SEQUENCE)
 	{
-		switch (task)
+		switch (task->subtask)
 		{
 			case (WELD_TASK):
 				usart_send_string(USART1, "START WELD_TASK\n", strlen("START WELD_TASK\n"));
 				welding_set(true);
-				task = MOTOR_TASK;
-				tim4_set_pwm(100);
-				tim4_enable(true);
+				task->subtask = MOTOR_TASK;
+				/*tim4_set_pwm(100);*/
+				task_set_delay(task, 100);
+				/*tim4_enable(true);*/
 				break;
 			case (MOTOR_TASK):
 				usart_send_string(USART1, "START MOTOR_TASK\n", strlen("START MOTOR_TASK\n"));
@@ -158,20 +188,48 @@ void process_task(void)
 				timer_enable_break_main_output(TIM1);
 				break;
 		}
-	}else if (sequence == STOP_SEQUENCE){
-		switch (task)
+	}else if (task->sequence == STOP_SEQUENCE){
+		switch (task->subtask)
 		{
 			case (WELD_TASK):
 				usart_send_string(USART1, "STOP WELD_TASK\n", strlen("STOP WELD_TASK\n"));
 				welding_set(false);
-				task = GAS_TASK; 
-				tim4_set_pwm(500);
-				tim4_enable(true);
+				task->subtask = GAS_TASK;
+				/*tim4_set_pwm(500);*/
+				task_set_delay(task, 500);
+				/*tim4_enable(true);*/
 				break;
 			case (GAS_TASK):
 				usart_send_string(USART1, "STOP GAS_TASK\n", strlen("STOP GAS_TASK\n"));
 				gas_set(false);
+				task->sequence = STOPPED_SEQUENCE;
 				break;
 		}
 	}
+}
+
+int init_varables(void)
+{
+	d = calloc(1, sizeof(Data_t));
+	d->encoder = calloc(1, sizeof(Encoder_t));
+	d->tasks = calloc(1, sizeof(Tasks_t));
+	d->tasks->sequence = 0;
+	d->tasks->subtask = 0;
+	d->encoder->systics = ENCODER_SYSTICS;
+	return 0;
+}
+
+void task_set_delay(Tasks_t *task, uint16_t delay)
+{
+	task->timeout = delay;
+}
+
+void calculate_speed(Encoder_t *enc)
+{
+	float speed;
+	speed = enc->current_cnt - enc->previous_cnt;
+	/*
+	 *enc->speed_mm = (speed * ENCODER_MM_PER_TIC * 1000/ENCODER_SYSTICS); 
+	 */
+	enc->speed_mm = (speed * ENCODER_MM_PER_TIC); 
 }

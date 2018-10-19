@@ -44,7 +44,13 @@ void gpio_init(){
 			GPIO_CNF_OUTPUT_PUSHPULL, WELD_PIN);
 	gpio_set_mode(BREAK_PORT, GPIO_MODE_OUTPUT_50_MHZ,
 			GPIO_CNF_OUTPUT_PUSHPULL, BREAK_PIN);
-	
+
+	/*Encoder inputs*/
+	gpio_set_mode(ENCODER_A_PORT, GPIO_MODE_INPUT,
+			GPIO_CNF_INPUT_FLOAT, ENCODER_A_PIN);
+	gpio_set_mode(ENCODER_B_PORT, GPIO_MODE_INPUT,
+			GPIO_CNF_INPUT_FLOAT, ENCODER_B_PIN);
+
 		/* Enable EXTI0 interrupt. */
 	nvic_enable_irq(NVIC_EXTI9_5_IRQ);
 		/* Configure the EXTI subsystem. */

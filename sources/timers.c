@@ -161,25 +161,33 @@ void tim4_init(void)
 	 * - Alignment edge
 	 * - Direction up
 	 */
-	timer_set_mode(TIM4, TIM_CR1_CKD_CK_INT,
-			TIM_CR1_CMS_EDGE, TIM_CR1_DIR_UP);
-
-	/*Set cycle duty to 1 seconds*/
-	timer_set_prescaler(TIM4, TIMER4_PRESCALER);
-	timer_set_period(TIM4, TIMER4_TOP);
-
-	/* Disable preload. */
-	timer_disable_preload(TIM4);
-	timer_one_shot_mode(TIM4);
-		timer_set_counter(TIM4, 0);
+/*
+ *        timer_set_mode(TIM4, TIM_CR1_CKD_CK_INT,
+ *                        TIM_CR1_CMS_EDGE, TIM_CR1_DIR_UP);
+ *
+ *        [>Set cycle duty to 1 seconds<]
+ *        timer_set_prescaler(TIM4, TIMER4_PRESCALER);
+ *        timer_set_period(TIM4, TIMER4_TOP);
+ *
+ *        [> Disable preload. <]
+ *        timer_disable_preload(TIM4);
+ *        timer_one_shot_mode(TIM4);
+ *                timer_set_counter(TIM4, 0);
+ */
 	/* Enable TIM4 interrupt. */
 	nvic_enable_irq(NVIC_TIM4_IRQ);
-	nvic_set_priority(23, 1),
-	nvic_set_priority(30, 2),
+	/*nvic_set_priority(23, 1),*/
+	/*nvic_set_priority(30, 2),*/
+
+	timer_set_period(TIM4, 36000);
+	timer_slave_set_mode(TIM4, TIM_SMCR_SMS_EM3); // encoder
+	timer_ic_set_input(TIM4, TIM_IC1, TIM_IC_IN_TI1);
+	timer_ic_set_input(TIM4, TIM_IC2, TIM_IC_IN_TI2);
+	timer_enable_counter(TIM4);
 
 	/*Enable timer 4 overflow and compare int */
 	timer_enable_irq(TIM4, (TIM_DIER_UIE));
-	timer_enable_irq(TIM4, (TIM_DIER_CC1IE));
+	/*timer_enable_irq(TIM4, (TIM_DIER_CC1IE));*/
 
 }
 void systick_setup(void)
@@ -329,13 +337,13 @@ void tim4_isr(void)
 	{
 		timer_clear_flag(TIM4, TIM_SR_CC1IF);
 		/*usart_send_string(USART1, "Task processing\n", strlen("Task processing\n"));*/
-		tim4_enable(false);
-		process_task();
+		/*tim4_enable(false);*/
+		/*process_task();*/
 
 	}
 	if (timer_get_flag(TIM4, TIM_SR_UIF))
 	{
 		timer_clear_flag(TIM4, TIM_SR_UIF);
-	//usart_send_string(USART1, "Tim4 overflow\n", strlen("Tim4 overflow\n"));
+		usart_printf(USART1, "Tim4 overflow\n");
 	}
 }
