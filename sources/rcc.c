@@ -9,6 +9,7 @@ void rcc_init(void){
 	rcc_periph_clock_enable(RCC_GPIOB);
 	rcc_periph_clock_enable(RCC_AFIO);
 	rcc_periph_clock_enable(RCC_USART1);
+    rcc_periph_clock_enable(RCC_DMA1);
 #ifdef USART_CRC
 	rcc_periph_clock_enable(RCC_CRC);
 #endif

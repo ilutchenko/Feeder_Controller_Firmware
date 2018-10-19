@@ -63,9 +63,9 @@ void exti9_5_isr(void)
 		{
 	weldExtiInt = 50;
 	weldPinStatus = gpio_get(WELD_GUN_PORT, WELD_GUN_PIN);
-					usart_send_string(USART1, "WPST: ", 6);
-					usart_send_byte(USART1, weldPinStatus);
-					usart_send_byte(USART1, '\n');
+					//usart_send_string(USART1, "WPST: ", 6);
+					//usart_send_byte(USART1, weldPinStatus);
+					//usart_send_byte(USART1, '\n');
 
 	/*usart_send_string(USART1, "Button interrupt \n", strlen("Button interrupt \n"));*/
 		}

@@ -49,7 +49,7 @@ int main(void)
 	channel_array[0] = 8;
 	/* Set the injected sequence here, with number of channels */
 	adc_set_regular_sequence(ADC2, 1, channel_array);
-	usart_send_string(USART1, "Welding controller started \n", strlen("Welding controller started \n"));
+	usart_printf(USART1, "Welding controller started \n");
 	systick_setup();
 
 	int i;

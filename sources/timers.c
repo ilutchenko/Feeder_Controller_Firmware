@@ -296,11 +296,11 @@ void tim2_isr(void)
 		if (freqCounter++ >= 150)
 		{
 			freqCounter = 0;
-			usart_send_string(USART1, "FREQ: ", strlen("FREQ: "));	
-			convertBaseVersion(motorFreq, 10, str, 3);
-			usart_send_string(USART1, str, 3);	
+			usart_printf(USART1, "FREQ: %f\n", freq);	
+			//convertBaseVersion(motorFreq, 10, str, 3);
+			//usart_send_string(USART1, str, 3);	
 
-			usart_send_string(USART1, "\n", 1);
+			//usart_send_string(USART1, "\n", 1);
 		}
 	}
 }
@@ -312,7 +312,7 @@ void tim3_isr(void)
 	{
 		timer_clear_flag(TIM3, TIM_SR_CC1IF);
 		break_set(false);
-		usart_send_string(USART1, "Break impulse executed\n", strlen("Break impulse executed\n"));
+	//	usart_send_string(USART1, "Break impulse executed\n", strlen("Break impulse executed\n"));
 
 	}
 	if (timer_get_flag(TIM3, TIM_SR_UIF))
@@ -336,6 +336,6 @@ void tim4_isr(void)
 	if (timer_get_flag(TIM4, TIM_SR_UIF))
 	{
 		timer_clear_flag(TIM4, TIM_SR_UIF);
-		usart_send_string(USART1, "Tim4 overflow\n", strlen("Tim4 overflow\n"));
+	//usart_send_string(USART1, "Tim4 overflow\n", strlen("Tim4 overflow\n"));
 	}
 }
