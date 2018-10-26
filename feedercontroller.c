@@ -6,15 +6,18 @@
 #include <libopencm3/stm32/adc.h>
 #include <libopencm3/stm32/usart.h>
 #include <libopencm3/stm32/gpio.h>
+#include <libopencm3/stm32/i2c.h>
 #include "sources/gpio.h"
 #include "sources/rcc.h"
+#include "sources/i2c.h"
 #include "sources/usart.h"
 #include "sources/timers.h"
 #include "sources/adc.h"
 #include "sources/defines.h"
+#include "sources/display.h"
 
 Data_t *d;
-
+volatile uint32_t system_millis = 0;
 uint16_t motorFreq; 
 uint8_t sequence = 0;
 uint8_t task = 0;
@@ -22,6 +25,9 @@ uint8_t channel_array[16];
 
 extern uint16_t weldExtiInt;
 extern uint8_t weldPinStatus;
+extern struct iic i2c;
+void milli_sleep(uint32_t delay);
+ 
 void process_task(Tasks_t *task);
 void initiate_start_sequence(Tasks_t *task);
 void initiate_stop_sequence(Tasks_t *task);
@@ -42,6 +48,7 @@ int main(void)
 	break_set(false);
 
 	usart_init(USART1, 115200, false);
+	/*display_set_speed(I2C1, "HELLO");*/
 
 
 	init_varables();
@@ -58,9 +65,11 @@ int main(void)
 	channel_array[0] = 8;
 	/* Set the injected sequence here, with number of channels */
 	adc_set_regular_sequence(ADC2, 1, channel_array);
-	usart_printf(USART1, "Welding controller started \n");
 	systick_setup();
 
+	i2c2_setup();
+	display_init(I2C2);
+	usart_printf(USART1, "Welding controller started \n");
 	int i;
 	while (1) {
 		for (i = 0; i < 800000; i++)	/* Wait a bit. */
@@ -72,6 +81,8 @@ int main(void)
 void sys_tick_handler(void){
 uint16_t adcVal;
 float div;
+	system_millis++;
+
 	/*PID regulation here?*/
 	if(d->tasks->sequence != STOPPED_SEQUENCE)
 	{
@@ -87,7 +98,8 @@ float div;
 		d->encoder->previous_cnt = d->encoder->current_cnt;
 		d->encoder->current_cnt = timer_get_counter(TIM4);
 		calculate_speed(d->encoder);
-		usart_printf(USART1, "SPEED: %f mm/sec\n", d->encoder->speed_mm);
+		/*usart_printf(USART1, "SPEED: %f mm/sec\n", d->encoder->speed_mm);*/
+		/*usart_printf(USART1, "CNT: %d mm/sec\n", timer_get_counter(TIM4));*/
 
 	}
 	if(!gpio_get(SWITCH_PORT, SWITCH_PIN))
@@ -216,6 +228,25 @@ int init_varables(void)
 	d->tasks->sequence = 0;
 	d->tasks->subtask = 0;
 	d->encoder->systics = ENCODER_SYSTICS;
+
+	i2c.init_seq = 0;
+	i2c.init_cmds[0] = (0x3 << 4) | COMMAND_D;
+	usart_printf(USART1, "0 %d \n", i2c.init_cmds[0]);
+	i2c.init_cmds[1] = (0x2 << 4) | COMMAND_D;
+	i2c.init_cmds[2] = (0x2 << 4)  | COMMAND_D;
+	i2c.init_cmds[3] = (0x8 << 4)  | COMMAND_D;
+	i2c.init_cmds[4] = (0x0 << 4)  | COMMAND_D;
+	i2c.init_cmds[5] = (0x8 << 4)  | COMMAND_D;
+	i2c.init_cmds[6] = (0x00 << 4)  | COMMAND_D;
+	i2c.init_cmds[7] = (0x01 << 4)  | COMMAND_D;
+	i2c.init_cmds[8] = (0x00 << 4)  | COMMAND_D;
+	i2c.init_cmds[9] = (0x06 << 4)  | COMMAND_D;
+	i2c.init_cmds[10] = (0x00 << 4)  | COMMAND_D;
+	i2c.init_cmds[11] = (0x0C << 4)  | COMMAND_D;
+	/*
+	 *i2c.init_cmds[12] = (0x5 << 4)  | DATA_D;
+	 *i2c.init_cmds[13] = (0x3 << 4)  | DATA_D;
+	 */
 	return 0;
 }
 
@@ -232,4 +263,19 @@ void calculate_speed(Encoder_t *enc)
 	 *enc->speed_mm = (speed * ENCODER_MM_PER_TIC * 1000/ENCODER_SYSTICS); 
 	 */
 	enc->speed_mm = (speed * ENCODER_MM_PER_TIC); 
+}
+
+/* simple sleep for delay milliseconds */
+void milli_sleep(uint32_t delay)
+{
+	uint32_t wake = system_millis + delay;
+	while (wake > system_millis) {
+		continue;
+	}
+}
+
+/* Getter function for the current time */
+uint32_t mtime(void)
+{
+	return system_millis;
 }
