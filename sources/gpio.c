@@ -54,16 +54,16 @@ void gpio_init(){
 		/* Enable EXTI0 interrupt. */
 	nvic_enable_irq(NVIC_EXTI9_5_IRQ);
 		/* Configure the EXTI subsystem. */
-	exti_select_source(EXTI7, WELD_GUN_PORT);
-	exti_set_trigger(EXTI7, EXTI_TRIGGER_BOTH);
-	exti_enable_request(EXTI7);
+	exti_select_source(EXTI9, WELD_GUN_PORT);
+	exti_set_trigger(EXTI9, EXTI_TRIGGER_BOTH);
+	exti_enable_request(EXTI9);
 }
 
 void exti9_5_isr(void)
 {
 	exti_line_state = GPIOB_IDR;
 
-	if (exti_get_flag_status(EXTI7))
+	if (exti_get_flag_status(EXTI9))
 	{
 		if (weldExtiInt == 0)
 		{
@@ -75,7 +75,7 @@ void exti9_5_isr(void)
 
 	/*usart_send_string(USART1, "Button interrupt \n", strlen("Button interrupt \n"));*/
 		}
-	exti_reset_request(EXTI7);
+	exti_reset_request(EXTI9);
 	}
 }
 #endif

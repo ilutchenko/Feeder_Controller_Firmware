@@ -344,6 +344,6 @@ void tim4_isr(void)
 	if (timer_get_flag(TIM4, TIM_SR_UIF))
 	{
 		timer_clear_flag(TIM4, TIM_SR_UIF);
-		usart_printf(USART1, "Tim4 overflow\n");
+		//usart_printf(USART1, "Tim4 overflow\n");
 	}
 }

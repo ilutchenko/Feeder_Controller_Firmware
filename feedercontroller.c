@@ -87,7 +87,7 @@ float div;
 		d->encoder->previous_cnt = d->encoder->current_cnt;
 		d->encoder->current_cnt = timer_get_counter(TIM4);
 		calculate_speed(d->encoder);
-		usart_printf(USART1, "SPEED: %f mm/sec\n", d->encoder->speed_mm);
+		usart_printf(USART1, "f%x\n", d->encoder->speed_mm);
 
 	}
 	if(!gpio_get(SWITCH_PORT, SWITCH_PIN))
@@ -231,5 +231,5 @@ void calculate_speed(Encoder_t *enc)
 	/*
 	 *enc->speed_mm = (speed * ENCODER_MM_PER_TIC * 1000/ENCODER_SYSTICS); 
 	 */
-	enc->speed_mm = (speed * ENCODER_MM_PER_TIC); 
+	enc->speed_mm = (uint16_t)(speed * ENCODER_MM_PER_TIC); 
 }

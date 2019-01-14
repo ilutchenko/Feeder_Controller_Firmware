@@ -25,18 +25,18 @@
 #define WELD_PIN	GPIO11
 #define WELD_PORT	GPIOB
 
-#define BREAK_PIN	GPIO6
+#define BREAK_PIN	GPIO8
 #define BREAK_PORT	GPIOB
 
-#define WELD_GUN_PIN	GPIO7
+#define WELD_GUN_PIN	GPIO9
 #define WELD_GUN_PORT	GPIOB
 
 #define SWITCH_PIN	GPIO5
 #define SWITCH_PORT	GPIOA
 
 //Encoder inputs
-#define ENCODER_A_PIN	GPIO8
-#define ENCODER_B_PIN	GPIO9
+#define ENCODER_A_PIN	GPIO7
+#define ENCODER_B_PIN	GPIO6
 #define ENCODER_A_PORT	GPIOB
 #define ENCODER_B_PORT	GPIOB
 
@@ -46,7 +46,7 @@ typedef struct
 {
 	uint16_t current_cnt;
 	uint16_t previous_cnt;
-	float speed_mm;
+	uint16_t speed_mm;
 	uint8_t  direction;
 	uint8_t systics;
 }Encoder_t;
