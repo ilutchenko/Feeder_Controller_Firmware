@@ -87,7 +87,11 @@ float div;
 		d->encoder->previous_cnt = d->encoder->current_cnt;
 		d->encoder->current_cnt = timer_get_counter(TIM4);
 		calculate_speed(d->encoder);
-		usart_printf(USART1, "f%x\n", d->encoder->speed_mm);
+        usart_send_byte(USART1, 'f');
+		usart_send_byte(USART1, (d->encoder->speed_mm) >> 8);
+        usart_send_byte(USART1, (d->encoder->speed_mm) & 0xFF );
+        usart_send_byte(USART1, '\n');
+        //usart_printf(USART1, "f%x\n", d->encoder->speed_mm);
 
 	}
 	if(!gpio_get(SWITCH_PORT, SWITCH_PIN))
