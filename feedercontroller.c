@@ -86,12 +86,13 @@ float div;
 		d->encoder->systics = ENCODER_SYSTICS;
 		d->encoder->previous_cnt = d->encoder->current_cnt;
 		d->encoder->current_cnt = timer_get_counter(TIM4);
+        //usart_printf(USART1, "TIM4: %d\n", d->encoder->current_cnt);
 		calculate_speed(d->encoder);
         usart_send_byte(USART1, 'f');
 		usart_send_byte(USART1, (d->encoder->speed_mm) >> 8);
         usart_send_byte(USART1, (d->encoder->speed_mm) & 0xFF );
         usart_send_byte(USART1, '\n');
-        //usart_printf(USART1, "f%x\n", d->encoder->speed_mm);
+        //usart_printf(USART1, "f%d\n", d->encoder->speed_mm);
 
 	}
 	if(!gpio_get(SWITCH_PORT, SWITCH_PIN))
@@ -153,7 +154,7 @@ void initiate_start_sequence(Tasks_t *task)
 {
 	gas_set(true);
 	task->sequence = START_SEQUENCE;
-	usart_send_string(USART1, "START GAS_TASK\n", strlen("START GAS_TASK\n"));
+	//usart_send_string(USART1, "START GAS_TASK\n", strlen("START GAS_TASK\n"));
 	task->subtask = WELD_TASK;
 	/*tim4_set_pwm(500);*/
 	task_set_delay(task, 500);
@@ -164,7 +165,7 @@ void initiate_stop_sequence(Tasks_t *task)
 {
 	break_motor();
 	task->sequence = STOP_SEQUENCE;
-	usart_send_string(USART1, "STOP MOTOR_TASK\n", strlen("STOP MOTOR_TASK\n"));
+	//usart_send_string(USART1, "STOP MOTOR_TASK\n", strlen("STOP MOTOR_TASK\n"));
 	task->subtask = WELD_TASK;
 	/*tim4_set_pwm(100);*/
 	task_set_delay(task, 100);
@@ -178,7 +179,7 @@ void process_task(Tasks_t *task)
 		switch (task->subtask)
 		{
 			case (WELD_TASK):
-				usart_send_string(USART1, "START WELD_TASK\n", strlen("START WELD_TASK\n"));
+				//usart_send_string(USART1, "START WELD_TASK\n", strlen("START WELD_TASK\n"));
 				welding_set(true);
 				task->subtask = MOTOR_TASK;
 				/*tim4_set_pwm(100);*/
@@ -186,7 +187,7 @@ void process_task(Tasks_t *task)
 				/*tim4_enable(true);*/
 				break;
 			case (MOTOR_TASK):
-				usart_send_string(USART1, "START MOTOR_TASK\n", strlen("START MOTOR_TASK\n"));
+			//	usart_send_string(USART1, "START MOTOR_TASK\n", strlen("START MOTOR_TASK\n"));
 				break_set(false);
 				tim1_enable(true);
 				timer_enable_break_main_output(TIM1);
@@ -196,7 +197,7 @@ void process_task(Tasks_t *task)
 		switch (task->subtask)
 		{
 			case (WELD_TASK):
-				usart_send_string(USART1, "STOP WELD_TASK\n", strlen("STOP WELD_TASK\n"));
+			//	usart_send_string(USART1, "STOP WELD_TASK\n", strlen("STOP WELD_TASK\n"));
 				welding_set(false);
 				task->subtask = GAS_TASK;
 				/*tim4_set_pwm(500);*/
@@ -204,7 +205,7 @@ void process_task(Tasks_t *task)
 				/*tim4_enable(true);*/
 				break;
 			case (GAS_TASK):
-				usart_send_string(USART1, "STOP GAS_TASK\n", strlen("STOP GAS_TASK\n"));
+			//	usart_send_string(USART1, "STOP GAS_TASK\n", strlen("STOP GAS_TASK\n"));
 				gas_set(false);
 				task->sequence = STOPPED_SEQUENCE;
 				break;
@@ -230,10 +231,14 @@ void task_set_delay(Tasks_t *task, uint16_t delay)
 
 void calculate_speed(Encoder_t *enc)
 {
-	float speed;
+	int16_t speed;
 	speed = enc->current_cnt - enc->previous_cnt;
+    if (speed < 0)
+        speed = speed * (-1);
+    //usart_printf(USART1, "delta %d\n", speed);
 	/*
 	 *enc->speed_mm = (speed * ENCODER_MM_PER_TIC * 1000/ENCODER_SYSTICS); 
 	 */
-	enc->speed_mm = (uint16_t)(speed * ENCODER_MM_PER_TIC); 
+	enc->speed_mm = (uint16_t)(speed * ENCODER_MM_PER_TIC * 10 * 60); 
+
 }

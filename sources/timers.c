@@ -304,7 +304,7 @@ void tim2_isr(void)
 		if (freqCounter++ >= 150)
 		{
 			freqCounter = 0;
-			usart_printf(USART1, "FREQ: %f\n", freq);	
+			//usart_printf(USART1, "FREQ: %f\n", freq);	
 			//convertBaseVersion(motorFreq, 10, str, 3);
 			//usart_send_string(USART1, str, 3);	
 

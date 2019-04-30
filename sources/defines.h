@@ -41,7 +41,7 @@
 #define ENCODER_B_PORT	GPIOB
 
 #define ENCODER_SYSTICS		100
-#define ENCODER_MM_PER_TIC	120.0/360
+#define ENCODER_MM_PER_TIC	120.0/2400
 typedef struct
 {
 	uint16_t current_cnt;
